@@ -103,7 +103,7 @@ void APlayer1::Move()
 {
 	direction = FTransform(GetControlRotation()).TransformVector(direction);
 	AddMovementInput(direction);
-	direction = FVector::ZeroVector;
+	direction = FVector::ZeroVector; 
 }
 
 void APlayer1::InputRun()

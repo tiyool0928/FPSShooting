@@ -49,7 +49,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
 		float walkSpeed = 300;
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
-		float runSpeed = 1200;
+		float runSpeed = 600;
 
 	float playerMaxHealth;			//최대체력
 	float playerHealth;				//현재체력
