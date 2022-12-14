@@ -17,12 +17,17 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		//플레이어의 이동속도
 		FVector velocity = player->GetVelocity();
-		//플레잉어의 전방 벡터
+		//플레이어의 전방 벡터
 		FVector forwardVector = player->GetActorForwardVector();
 		//speed에 할당
 		speed = FVector::DotProduct(forwardVector, velocity);
 		//좌우 속도 할당
 		FVector rightVector = player->GetActorRightVector();
 		direction = FVector::DotProduct(rightVector, velocity);
+		
+		FRotator ControlRot = player->GetControlRotation();
+		FRotator ActorRot = player->GetActorRotation();
+		//control - actor로 정규화한 값을 pitch에 할당
+		pitch = UKismetMathLibrary::NormalizedDeltaRotator(ControlRot, ActorRot).Pitch;
 	}
 }

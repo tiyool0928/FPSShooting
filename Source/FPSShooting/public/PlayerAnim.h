@@ -21,6 +21,10 @@ public:
 	//플레이어 좌우 이동 속도
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float direction = 0;
+	//플레이어 시선 (위아래)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		float pitch = 0;
+
 
 	//매 프레임 갱신
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;

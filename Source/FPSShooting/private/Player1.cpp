@@ -3,7 +3,6 @@
 
 #include "Player1.h"
 #include <GameFramework/CharacterMovementComponent.h>
-#include <GameFramework/SpringArmComponent.h>
 #include <Camera/CameraComponent.h>
 
 // Sets default values
@@ -21,20 +20,23 @@ APlayer1::APlayer1()
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90), FRotator(0, -90, 0));
 	}
 
-	//카메라 설정
-	//SpringArm 컴포넌트
-	springArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
-	springArmComp->SetupAttachment(RootComponent);
-	springArmComp->SetRelativeLocation(FVector(0, 0, 90));
-	springArmComp->TargetArmLength = 500;
-	springArmComp->bUsePawnControlRotation = true;		//암컴포넌트 폰 제어
-	springArmComp->bDoCollisionTest = false;			//카메라 시야 가릴 때 자동 카메라 위치조정 비활성화
 	//camera 컴포넌트
-	tpsCamComp = CreateDefaultSubobject<UCameraComponent>(TEXT("TpsCamComp"));
-	tpsCamComp->SetupAttachment(springArmComp);
-	tpsCamComp->bUsePawnControlRotation = false;		//카메라 폰 제어
+	camComp = CreateDefaultSubobject<UCameraComponent>(TEXT("fpsCamComp"));
+	camComp->SetupAttachment(GetMesh(), TEXT("head"));
+	camComp->bUsePawnControlRotation = true;		//카메라 폰 제어
 
 	bUseControllerRotationYaw = true;					//클래스디폴트 Yaw 설정
+
+	//라이플mesh 컴포넌트
+	rifleComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RifleMeshComp"));
+	rifleComp->SetupAttachment(GetMesh(), TEXT("RifleSocket_r"));
+	ConstructorHelpers::FObjectFinder<UStaticMesh> RifleMesh(TEXT("StaticMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/AR4/SM_AR4.SM_AR4'"));
+
+	if (RifleMesh.Succeeded())
+	{
+		rifleComp->SetStaticMesh(RifleMesh.Object);
+		rifleComp->SetRelativeLocationAndRotation(FVector(-3, 3, 2), FRotator(100, 90, -80));
+	}
 
 	//체력 초기화
 	playerMaxHealth = 100;

@@ -22,10 +22,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
-	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class USpringArmComponent* springArmComp;
-	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class UCameraComponent* tpsCamComp;
+	UPROPERTY(EditDefaultsOnly)
+		class UCameraComponent* camComp;
+	UPROPERTY(VisibleAnywhere)
+		class UStaticMeshComponent* rifleComp;				//라이플메시 컴포넌트 등록
 
 	//좌우 입력 처리
 	void Turn(float value);
