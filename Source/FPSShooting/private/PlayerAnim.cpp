@@ -5,6 +5,12 @@
 #include "Player1.h"
 #include "Kismet/KismetMathLibrary.h"
 
+void UPlayerAnim::PlayJumpMontage()
+{
+	if (JumpMontage != nullptr)
+		Montage_Play(JumpMontage);
+}
+
 void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);

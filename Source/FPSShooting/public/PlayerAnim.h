@@ -25,6 +25,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float pitch = 0;
 
+	//재생할 점프 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* JumpMontage;
+
+	void PlayJumpMontage();
+
 
 	//매 프레임 갱신
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
