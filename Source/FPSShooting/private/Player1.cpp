@@ -3,6 +3,8 @@
 
 #include "Player1.h"
 #include "PlayerAnim.h"
+#include "Bullet.h"
+#include <Components/ArrowComponent.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include <Camera/CameraComponent.h>
 
@@ -29,15 +31,19 @@ APlayer1::APlayer1()
 	bUseControllerRotationYaw = true;					//클래스디폴트 Yaw 설정
 
 	//라이플mesh 컴포넌트
-	rifleComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RifleMeshComp"));
-	rifleComp->SetupAttachment(GetMesh(), TEXT("RifleSocket_r"));
-	ConstructorHelpers::FObjectFinder<UStaticMesh> RifleMesh(TEXT("StaticMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/AR4/SM_AR4.SM_AR4'"));
+	rifleMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMeshComp"));
+	rifleMeshComp->SetupAttachment(GetMesh(), TEXT("RifleSocket_r"));
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> RifleMesh(TEXT("SkeletalMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/AR4/SK_AR4.SK_AR4'"));
 
 	if (RifleMesh.Succeeded())
 	{
-		rifleComp->SetStaticMesh(RifleMesh.Object);
-		rifleComp->SetRelativeLocationAndRotation(FVector(-3, 3, 2), FRotator(100, 90, -80));
+		rifleMeshComp->SetSkeletalMesh(RifleMesh.Object);
+		rifleMeshComp->SetRelativeLocationAndRotation(FVector(-3, 3, 2), FRotator(100, 90, -80));
 	}
+
+	//arrow 컴포넌트
+	bulletArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
+	bulletArrow->SetupAttachment(rifleMeshComp, TEXT("Muzzle"));
 
 	//체력 초기화
 	playerMaxHealth = 100;
@@ -80,6 +86,8 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	//달리기 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &APlayer1::InputJump);
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &APlayer1::OutputJump);
+	//총 발사 입력 바인딩
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::Fire);
 }
 
 void APlayer1::Turn(float value)
@@ -129,4 +137,10 @@ void APlayer1::InputJump()
 void APlayer1::OutputJump()
 {
 	bPressedJump = false;
+}
+
+void APlayer1::Fire()
+{
+	FTransform muzzle = bulletArrow->GetComponentTransform();
+	GetWorld()->SpawnActor<ABullet>(bulletFactory, muzzle);
 }

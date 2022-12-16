@@ -24,8 +24,10 @@ public:
 public:
 	UPROPERTY(EditDefaultsOnly)
 		class UCameraComponent* camComp;
-	UPROPERTY(VisibleAnywhere)
-		class UStaticMeshComponent* rifleComp;				//라이플메시 컴포넌트 등록
+	UPROPERTY(EditDefaultsOnly)
+		class USkeletalMeshComponent* rifleMeshComp;				//라이플메시 컴포넌트 등록
+	UPROPERTY(EditDefaultsOnly)
+		class UArrowComponent* bulletArrow;							//총알 발사 방향, 위치
 
 	//좌우 입력 처리
 	void Turn(float value);
@@ -44,6 +46,10 @@ public:
 	void OutputRun();				//달리기 Release
 	void InputJump();				//점프 Press
 	void OutputJump();				//점프 Release
+	void Fire();					//총 발사
+
+	UPROPERTY(EditDefaultsOnly, Category = Factory)
+		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
