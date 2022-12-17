@@ -27,6 +27,8 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 		class USkeletalMeshComponent* rifleMeshComp;				//라이플메시 컴포넌트 등록
 	UPROPERTY(EditDefaultsOnly)
+		class UStaticMeshComponent* sniperMeshComp;				//스나이프메시 컴포넌트 등록
+	UPROPERTY(EditDefaultsOnly)
 		class UArrowComponent* bulletArrow;							//총알 발사 방향, 위치
 
 	//좌우 입력 처리
@@ -47,6 +49,9 @@ public:
 	void InputJump();				//점프 Press
 	void OutputJump();				//점프 Release
 	void Fire();					//총 발사
+	//총 스왑 함수
+	void Swap1();
+	void Swap2();
 
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리

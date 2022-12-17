@@ -34,13 +34,21 @@ APlayer1::APlayer1()
 	rifleMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RifleMeshComp"));
 	rifleMeshComp->SetupAttachment(GetMesh(), TEXT("RifleSocket_r"));
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> RifleMesh(TEXT("SkeletalMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/AR4/SK_AR4.SK_AR4'"));
-
 	if (RifleMesh.Succeeded())
 	{
 		rifleMeshComp->SetSkeletalMesh(RifleMesh.Object);
-		rifleMeshComp->SetRelativeLocationAndRotation(FVector(-3, 3, 2), FRotator(100, 90, -80));
+		rifleMeshComp->SetRelativeLocationAndRotation(FVector(-3, 3, 2), FRotator(80, -90, 101));
 	}
-
+	//스나이프mesh 컴포넌트
+	sniperMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SnipeMeshComp"));
+	sniperMeshComp->SetupAttachment(GetMesh(), TEXT("RifleSocket_r"));
+	ConstructorHelpers::FObjectFinder<UStaticMesh> SnipeMesh(TEXT("StaticMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/Sniper/sniper_rifle.sniper_rifle'"));
+	if (SnipeMesh.Succeeded())
+	{
+		sniperMeshComp->SetStaticMesh(SnipeMesh.Object);
+		sniperMeshComp->SetRelativeLocationAndRotation(FVector(-5, -30, -4), FRotator(78, -55, 135));
+		sniperMeshComp->SetWorldScale3D(FVector(0.1f, 0.15f, 0.15f));
+	}
 	//arrow 컴포넌트
 	bulletArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
 	bulletArrow->SetupAttachment(rifleMeshComp, TEXT("Muzzle"));
@@ -57,6 +65,9 @@ void APlayer1::BeginPlay()
 	
 	//초기 속도 걷기속도
 	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+	//시작 시 소총으로 시작
+	rifleMeshComp->SetVisibility(true);
+	sniperMeshComp->SetVisibility(false);
 }
 
 // Called every frame
@@ -88,6 +99,9 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &APlayer1::OutputJump);
 	//총 발사 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::Fire);
+	//총 변경 입력 바인딩
+	PlayerInputComponent->BindAction(TEXT("Swap1"), IE_Pressed, this, &APlayer1::Swap1);
+	PlayerInputComponent->BindAction(TEXT("Swap2"), IE_Pressed, this, &APlayer1::Swap2);
 }
 
 void APlayer1::Turn(float value)
@@ -143,4 +157,16 @@ void APlayer1::Fire()
 {
 	FTransform muzzle = bulletArrow->GetComponentTransform();
 	GetWorld()->SpawnActor<ABullet>(bulletFactory, muzzle);
+}
+
+void APlayer1::Swap1()
+{
+	rifleMeshComp->SetVisibility(true);
+	sniperMeshComp->SetVisibility(false);
+}
+
+void APlayer1::Swap2()
+{
+	rifleMeshComp->SetVisibility(false);
+	sniperMeshComp->SetVisibility(true);
 }
