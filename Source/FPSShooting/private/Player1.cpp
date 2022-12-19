@@ -4,9 +4,11 @@
 #include "Player1.h"
 #include "PlayerAnim.h"
 #include "Bullet.h"
+#include "UI_SniperZoom.h"
 #include <Components/ArrowComponent.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include <Camera/CameraComponent.h>
+#include <Kismet/KismetMathLibrary.h>
 
 // Sets default values
 APlayer1::APlayer1()
@@ -68,6 +70,18 @@ void APlayer1::BeginPlay()
 	//시작 시 소총으로 시작
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
+	//일반 크로스헤어, 스코프 위젯 생성
+	if (IsValid(zoomWidget))
+	{
+		_zoomWidget = Cast<UUI_SniperZoom>(CreateWidget(GetWorld(), zoomWidget));
+		_zoomWidget->SetOwnerPlayer(this);
+	}
+	if (IsValid(crosshairWidget))
+		_crosshairWidget = CreateWidget(GetWorld(), crosshairWidget);
+
+	if (_crosshairWidget != nullptr)
+		_crosshairWidget->AddToViewport();
+		
 }
 
 // Called every frame
@@ -99,6 +113,8 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &APlayer1::OutputJump);
 	//총 발사 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::Fire);
+	//저격총 스코프 사용/해제 입력 바인딩
+	PlayerInputComponent->BindAction(TEXT("ZoomInOut"), IE_Pressed, this, &APlayer1::ZoomInOut);
 	//총 변경 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Swap1"), IE_Pressed, this, &APlayer1::Swap1);
 	PlayerInputComponent->BindAction(TEXT("Swap2"), IE_Pressed, this, &APlayer1::Swap2);
@@ -155,18 +171,87 @@ void APlayer1::OutputJump()
 
 void APlayer1::Fire()
 {
-	FTransform muzzle = bulletArrow->GetComponentTransform();
-	GetWorld()->SpawnActor<ABullet>(bulletFactory, muzzle);
+	FVector startPos = camComp->GetComponentLocation();
+	FVector endPos = startPos + camComp->GetForwardVector() * 5000;
+
+	FHitResult hitInfo;					//충돌 정보
+	FCollisionQueryParams params;		//충돌옵션 설정변수
+	params.AddIgnoredActor(this);		//본인 제외
+	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+	
+	//라인트레이스가 히트되었을 경우
+	if (bHit)
+	{
+		if (bUsingRifle)
+		{
+			//총구 위치
+			FVector muzzle = bulletArrow->GetComponentLocation();
+			//타겟으로의 방향
+			FRotator targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.ImpactPoint);
+			//타겟 위치
+			FTransform target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
+			GetWorld()->SpawnActor<ABullet>(bulletFactory, target);
+		}
+		else if (bUsingSniper)
+		{
+
+		}
+	}
+	else
+	{
+		if (bUsingRifle)
+		{
+			//총구 위치
+			FVector muzzle = bulletArrow->GetComponentLocation();
+			//타겟으로의 방향	(타겟이 없으므로 트레이스 끝 부분 지정)
+			FRotator targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.TraceEnd);
+			//타겟 위치
+			FTransform target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
+			GetWorld()->SpawnActor<ABullet>(bulletFactory, target);
+		}
+		else if (bUsingSniper)
+		{
+
+		}
+	}
+}
+
+void APlayer1::ZoomInOut()
+{
+	if (bUsingSniper)
+	{
+		if (!isZooming)
+		{
+			isZooming = true;
+			//스코프 UI 화면 출력
+			_zoomWidget->AddToViewport();
+			camComp->SetFieldOfView(45);
+			_crosshairWidget->RemoveFromParent();
+		}
+
+		else
+		{
+			isZooming = false;
+			//크로스헤어 UI 화면 출력
+			_zoomWidget->RemoveFromParent();
+			camComp->SetFieldOfView(90);
+			_crosshairWidget->AddToViewport();
+		}
+	}
 }
 
 void APlayer1::Swap1()
 {
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
+	bUsingRifle = true;
+	bUsingSniper = false;
 }
 
 void APlayer1::Swap2()
 {
 	rifleMeshComp->SetVisibility(false);
 	sniperMeshComp->SetVisibility(true);
+	bUsingSniper = true;
+	bUsingRifle = false;
 }

@@ -49,9 +49,19 @@ public:
 	void InputJump();				//점프 Press
 	void OutputJump();				//점프 Release
 	void Fire();					//총 발사
+	//저격총 스코프 사용, 해제
+	void ZoomInOut();
 	//총 스왑 함수
 	void Swap1();
 	void Swap2();
+
+	class UUserWidget* _crosshairWidget;
+	class UUI_SniperZoom* _zoomWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+		TSubclassOf<UUserWidget> crosshairWidget;			//Crosshair UI
+	UPROPERTY(EditDefaultsOnly, Category = UI)
+		TSubclassOf<UUserWidget> zoomWidget;			//Zoom UI
 
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
@@ -64,4 +74,8 @@ public:
 
 	float playerMaxHealth;			//최대체력
 	float playerHealth;				//현재체력
+
+	bool isZooming = false;					//저격총 스코프를 사용하고 있는 상태인가?
+	bool bUsingRifle = true;				//소총을 든 상태인가?
+	bool bUsingSniper = false;				//저격총을 든 상태인가?
 };
