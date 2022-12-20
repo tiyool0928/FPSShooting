@@ -7,6 +7,7 @@
 #include "UI_SniperZoom.h"
 #include <Components/ArrowComponent.h>
 #include <GameFramework/CharacterMovementComponent.h>
+#include <GameFramework/SpringArmComponent.h>
 #include <Camera/CameraComponent.h>
 #include <Kismet/KismetMathLibrary.h>
 
@@ -25,10 +26,25 @@ APlayer1::APlayer1()
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90), FRotator(0, -90, 0));
 	}
 
-	//camera 컴포넌트
-	camComp = CreateDefaultSubobject<UCameraComponent>(TEXT("fpsCamComp"));
-	camComp->SetupAttachment(GetMesh(), TEXT("head"));
-	camComp->bUsePawnControlRotation = true;		//카메라 폰 제어
+	//카메라 설정
+	//SpringArm 컴포넌트
+	springArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
+	springArmComp->SetupAttachment(RootComponent);
+	springArmComp->SetRelativeLocation(FVector(0, 0, 90));
+	springArmComp->TargetArmLength = 500;
+	springArmComp->bUsePawnControlRotation = true;		//암컴포넌트 폰 제어
+	springArmComp->bDoCollisionTest = false;			//카메라 시야 가릴 때 자동 카메라 위치조정 비활성화
+	//TPScamera 컴포넌트
+	TPScamComp = CreateDefaultSubobject<UCameraComponent>(TEXT("TpsCamComp"));
+	TPScamComp->SetupAttachment(springArmComp);
+	TPScamComp->bUsePawnControlRotation = false;		//카메라 폰 제어
+	TPScamComp->SetAutoActivate(false);
+
+	//FPScamera 컴포넌트
+	FPScamComp = CreateDefaultSubobject<UCameraComponent>(TEXT("fpsCamComp"));
+	FPScamComp->SetupAttachment(GetMesh(), TEXT("head"));
+	FPScamComp->bUsePawnControlRotation = true;		//카메라 폰 제어
+	FPScamComp->SetAutoActivate(true);				//FPS카메라부터 활성화
 
 	bUseControllerRotationYaw = true;					//클래스디폴트 Yaw 설정
 
@@ -58,6 +74,9 @@ APlayer1::APlayer1()
 	//체력 초기화
 	playerMaxHealth = 100;
 	playerHealth = playerMaxHealth;
+	//플레이어 앉기 세팅
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+	GetCharacterMovement()->CrouchedHalfHeight = 60;
 }
 
 // Called when the game starts or when spawned
@@ -67,6 +86,7 @@ void APlayer1::BeginPlay()
 	
 	//초기 속도 걷기속도
 	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = crouchSpeed;
 	//시작 시 소총으로 시작
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
@@ -108,11 +128,16 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	//달리기 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Run"), IE_Pressed, this, &APlayer1::InputRun);
 	PlayerInputComponent->BindAction(TEXT("Run"), IE_Released, this, &APlayer1::OutputRun);
-	//달리기 입력 바인딩
+	//점프 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &APlayer1::InputJump);
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &APlayer1::OutputJump);
+	//앉기 입력 바인딩
+	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &APlayer1::InputCrouch);
+	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Released, this, &APlayer1::OutputCrouch);
 	//총 발사 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::Fire);
+	//카메라 시점 변경 입력 바인딩
+	PlayerInputComponent->BindAction(TEXT("ChangePerspective"), IE_Pressed, this, &APlayer1::ChangePerspective);
 	//저격총 스코프 사용/해제 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("ZoomInOut"), IE_Pressed, this, &APlayer1::ZoomInOut);
 	//총 변경 입력 바인딩
@@ -169,10 +194,31 @@ void APlayer1::OutputJump()
 	bPressedJump = false;
 }
 
+void APlayer1::InputCrouch()
+{
+	Crouch();
+}
+
+void APlayer1::OutputCrouch()
+{
+	UnCrouch();
+}
+
 void APlayer1::Fire()
 {
-	FVector startPos = camComp->GetComponentLocation();
-	FVector endPos = startPos + camComp->GetForwardVector() * 5000;
+	FVector startPos;
+	FVector endPos;
+	if (FPScamComp->IsActive())	//FPS시점일 경우
+	{
+		startPos = FPScamComp->GetComponentLocation();
+		endPos = startPos + FPScamComp->GetForwardVector() * 5000;
+	}
+	else						//TPS시점일 경우
+	{
+		startPos = TPScamComp->GetComponentLocation();
+		endPos = startPos + TPScamComp->GetForwardVector() * 5000;
+	}
+	 
 
 	FHitResult hitInfo;					//충돌 정보
 	FCollisionQueryParams params;		//충돌옵션 설정변수
@@ -194,7 +240,7 @@ void APlayer1::Fire()
 		}
 		else if (bUsingSniper)
 		{
-
+			DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.ImpactPoint, FColor::Red, false, 3, (uint8)0U, 1.5f);
 		}
 	}
 	else
@@ -211,8 +257,24 @@ void APlayer1::Fire()
 		}
 		else if (bUsingSniper)
 		{
-
+			DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.TraceEnd, FColor::Green, false, 3, (uint8)0U, 1.5f);
 		}
+	}
+}
+
+void APlayer1::ChangePerspective()
+{
+	if (FPScamComp->IsActive())
+	{
+		FPScamComp->SetActive(false);
+		TPScamComp->SetActive(true);
+		isFPSPerspective = false;
+	}
+	else
+	{
+		FPScamComp->SetActive(true);
+		TPScamComp->SetActive(false);
+		isFPSPerspective = true;
 	}
 }
 
@@ -222,19 +284,28 @@ void APlayer1::ZoomInOut()
 	{
 		if (!isZooming)
 		{
+			if (!isFPSPerspective)		//TPS카메라 상태이면 줌인하는동안 FPS로 변경
+			{
+				FPScamComp->SetActive(true);
+				TPScamComp->SetActive(false);
+			}
 			isZooming = true;
 			//스코프 UI 화면 출력
 			_zoomWidget->AddToViewport();
-			camComp->SetFieldOfView(45);
+			FPScamComp->SetFieldOfView(45);
 			_crosshairWidget->RemoveFromParent();
 		}
-
 		else
 		{
+			if (!isFPSPerspective)		//TPS카메라 상태이면 다시 TPS카메라 시점으로 변경
+			{
+				FPScamComp->SetActive(false);
+				TPScamComp->SetActive(true);
+			}
 			isZooming = false;
 			//크로스헤어 UI 화면 출력
 			_zoomWidget->RemoveFromParent();
-			camComp->SetFieldOfView(90);
+			FPScamComp->SetFieldOfView(90);
 			_crosshairWidget->AddToViewport();
 		}
 	}

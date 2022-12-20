@@ -23,6 +23,8 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		//플레이어의 이동속도
 		FVector velocity = player->GetVelocity();
+		//플레이어가 앉아있는가
+		isCrouch = player->bIsCrouched;
 		//플레이어의 전방 벡터
 		FVector forwardVector = player->GetActorForwardVector();
 		//speed에 할당

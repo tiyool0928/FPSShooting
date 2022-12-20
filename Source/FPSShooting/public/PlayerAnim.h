@@ -24,6 +24,9 @@ public:
 	//플레이어 시선 (위아래)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float pitch = 0;
+	//플레이어가 앉아있는지
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		bool isCrouch = false;
 
 	//재생할 점프 몽타주
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
