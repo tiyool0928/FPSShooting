@@ -30,10 +30,11 @@ APlayer1::APlayer1()
 	//SpringArm 컴포넌트
 	springArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	springArmComp->SetupAttachment(RootComponent);
-	springArmComp->SetRelativeLocation(FVector(0, 0, 90));
-	springArmComp->TargetArmLength = 500;
+	springArmComp->SetRelativeLocation(FVector(0, 20, 120));
+	springArmComp->TargetArmLength = 250;
 	springArmComp->bUsePawnControlRotation = true;		//암컴포넌트 폰 제어
 	springArmComp->bDoCollisionTest = false;			//카메라 시야 가릴 때 자동 카메라 위치조정 비활성화
+	springArmComp->bEnableCameraLag = true;
 	//TPScamera 컴포넌트
 	TPScamComp = CreateDefaultSubobject<UCameraComponent>(TEXT("TpsCamComp"));
 	TPScamComp->SetupAttachment(springArmComp);
@@ -315,6 +316,19 @@ void APlayer1::Swap1()
 {
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
+	if (isZooming)
+	{
+		if (!isFPSPerspective)		//TPS카메라 상태이면 다시 TPS카메라 시점으로 변경
+		{
+			FPScamComp->SetActive(false);
+			TPScamComp->SetActive(true);
+		}
+		isZooming = false;
+		//크로스헤어 UI 화면 출력
+		_zoomWidget->RemoveFromParent();
+		FPScamComp->SetFieldOfView(90);
+		_crosshairWidget->AddToViewport();
+	}
 	bUsingRifle = true;
 	bUsingSniper = false;
 }
