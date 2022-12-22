@@ -261,6 +261,9 @@ void APlayer1::Fire()
 			DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.TraceEnd, FColor::Green, false, 3, (uint8)0U, 1.5f);
 		}
 	}
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayFireMontage();
+	
 }
 
 void APlayer1::ChangePerspective()

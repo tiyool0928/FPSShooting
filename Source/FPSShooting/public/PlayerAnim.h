@@ -32,7 +32,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* JumpMontage;
 
+	//재생할 사격 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* FireMontage;
+
 	void PlayJumpMontage();
+	void PlayFireMontage();
 
 
 	//매 프레임 갱신
