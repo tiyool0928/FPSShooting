@@ -136,7 +136,7 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &APlayer1::InputCrouch);
 	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Released, this, &APlayer1::OutputCrouch);
 	//총 발사 입력 바인딩
-	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::Fire);
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::InputLeftMouse);
 	//카메라 시점 변경 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("ChangePerspective"), IE_Pressed, this, &APlayer1::ChangePerspective);
 	//저격총 스코프 사용/해제 입력 바인딩
@@ -144,6 +144,7 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	//총 변경 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Swap1"), IE_Pressed, this, &APlayer1::Swap1);
 	PlayerInputComponent->BindAction(TEXT("Swap2"), IE_Pressed, this, &APlayer1::Swap2);
+	PlayerInputComponent->BindAction(TEXT("Swap3"), IE_Pressed, this, &APlayer1::Swap3);
 }
 
 void APlayer1::Turn(float value)
@@ -203,6 +204,14 @@ void APlayer1::InputCrouch()
 void APlayer1::OutputCrouch()
 {
 	UnCrouch();
+}
+
+void APlayer1::InputLeftMouse()
+{
+	if (bUsingRifle || bUsingSniper)
+		Fire();
+	else
+		ThrowGrenade();
 }
 
 void APlayer1::Fire()
@@ -282,6 +291,12 @@ void APlayer1::ChangePerspective()
 	}
 }
 
+void APlayer1::ThrowGrenade()
+{
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayThrowGrenadeMontage();
+}
+
 void APlayer1::ZoomInOut()
 {
 	if (bUsingSniper)
@@ -341,5 +356,26 @@ void APlayer1::Swap2()
 	rifleMeshComp->SetVisibility(false);
 	sniperMeshComp->SetVisibility(true);
 	bUsingSniper = true;
+	bUsingRifle = false;
+}
+
+void APlayer1::Swap3()
+{
+	rifleMeshComp->SetVisibility(false);
+	sniperMeshComp->SetVisibility(false);
+	if (isZooming)
+	{
+		if (!isFPSPerspective)		//TPS카메라 상태이면 다시 TPS카메라 시점으로 변경
+		{
+			FPScamComp->SetActive(false);
+			TPScamComp->SetActive(true);
+		}
+		isZooming = false;
+		//크로스헤어 UI 화면 출력
+		_zoomWidget->RemoveFromParent();
+		FPScamComp->SetFieldOfView(90);
+		_crosshairWidget->AddToViewport();
+	}
+	bUsingSniper = false;
 	bUsingRifle = false;
 }

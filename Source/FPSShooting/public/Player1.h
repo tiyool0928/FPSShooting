@@ -54,14 +54,16 @@ public:
 	void OutputJump();				//점프 Release
 	void InputCrouch();				//앉기 Press
 	void OutputCrouch();			//앉기 Release
+	void InputLeftMouse();			//왼쪽 마우스 클릭
 	void Fire();					//총 발사
-	void ChangePerspective();			//카메라 시점 변경
+	void ChangePerspective();		//카메라 시점 변경
+	void ThrowGrenade();			//수류탄 투척
 	//저격총 스코프 사용, 해제
 	void ZoomInOut();
 	//총 스왑 함수
 	void Swap1();
 	void Swap2();
-	
+	void Swap3();
 
 	class UUserWidget* _crosshairWidget;
 	class UUI_SniperZoom* _zoomWidget;

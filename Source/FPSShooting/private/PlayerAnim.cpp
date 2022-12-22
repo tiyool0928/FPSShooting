@@ -17,6 +17,12 @@ void UPlayerAnim::PlayFireMontage()
 		Montage_Play(FireMontage);
 }
 
+void UPlayerAnim::PlayThrowGrenadeMontage()
+{
+	if (ThrowGrenadeMontage != nullptr)
+		Montage_Play(ThrowGrenadeMontage);
+}
+
 void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);

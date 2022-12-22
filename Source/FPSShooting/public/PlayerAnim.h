@@ -36,8 +36,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* FireMontage;
 
+	//재생할 수류탄 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* ThrowGrenadeMontage;
+
 	void PlayJumpMontage();
 	void PlayFireMontage();
+	void PlayThrowGrenadeMontage();
 
 
 	//매 프레임 갱신
