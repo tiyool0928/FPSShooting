@@ -17,6 +17,12 @@ void UPlayerAnim::PlayFireMontage()
 		Montage_Play(FireMontage);
 }
 
+void UPlayerAnim::PlayReadyGrenadeMontage()
+{
+	if (ReadyGrenadeMontage != nullptr)
+		Montage_Play(ReadyGrenadeMontage);
+}
+
 void UPlayerAnim::PlayThrowGrenadeMontage()
 {
 	if (ThrowGrenadeMontage != nullptr)
@@ -37,6 +43,8 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		FVector velocity = player->GetVelocity();
 		//플레이어가 앉아있는가
 		isCrouch = player->bIsCrouched;
+		//수류탄을 들고있는가
+		isSwap3 = player->bUsingGrenade;
 		//플레이어의 전방 벡터
 		FVector forwardVector = player->GetActorForwardVector();
 		//speed에 할당

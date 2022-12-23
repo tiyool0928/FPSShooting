@@ -24,9 +24,13 @@ public:
 	//플레이어 시선 (위아래)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float pitch = 0;
-	//플레이어가 앉아있는지
+	//플레이어가 앉아있는가
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		bool isCrouch = false;
+
+	//수류탄을 들고있는가
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		bool isSwap3 = false;
 
 	//재생할 점프 몽타주
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
@@ -40,8 +44,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* ThrowGrenadeMontage;
 
+	//재생할 수류탄 대기 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* ReadyGrenadeMontage;
+
 	void PlayJumpMontage();
 	void PlayFireMontage();
+	void PlayReadyGrenadeMontage();
 	void PlayThrowGrenadeMontage();
 
 

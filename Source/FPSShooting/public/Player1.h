@@ -91,4 +91,9 @@ public:
 	bool isZooming = false;					//저격총 스코프를 사용하고 있는 상태인가?
 	bool bUsingRifle = true;				//소총을 든 상태인가?
 	bool bUsingSniper = false;				//저격총을 든 상태인가?
+	bool bUsingGrenade = false;				//수류탄을 든 상태인가?
+
+	//노티파이 호출 함수
+	UFUNCTION(BluePrintCallable)
+		void AnimNotify_ThrowEnd();
 };

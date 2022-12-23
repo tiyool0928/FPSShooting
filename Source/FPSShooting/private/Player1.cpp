@@ -294,6 +294,8 @@ void APlayer1::ChangePerspective()
 void APlayer1::ThrowGrenade()
 {
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+
+	anim->StopAllMontages(0);
 	anim->PlayThrowGrenadeMontage();
 }
 
@@ -332,6 +334,10 @@ void APlayer1::ZoomInOut()
 
 void APlayer1::Swap1()
 {
+	bUsingRifle = true;
+	bUsingSniper = false;
+	bUsingGrenade = false;
+
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
 	if (isZooming)
@@ -347,20 +353,27 @@ void APlayer1::Swap1()
 		FPScamComp->SetFieldOfView(90);
 		_crosshairWidget->AddToViewport();
 	}
-	bUsingRifle = true;
-	bUsingSniper = false;
 }
 
 void APlayer1::Swap2()
 {
-	rifleMeshComp->SetVisibility(false);
-	sniperMeshComp->SetVisibility(true);
 	bUsingSniper = true;
 	bUsingRifle = false;
+	bUsingGrenade = false;
+
+	rifleMeshComp->SetVisibility(false);
+	sniperMeshComp->SetVisibility(true);
 }
 
 void APlayer1::Swap3()
 {
+	bUsingSniper = false;
+	bUsingRifle = false;
+	bUsingGrenade = true;
+
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayReadyGrenadeMontage();
+
 	rifleMeshComp->SetVisibility(false);
 	sniperMeshComp->SetVisibility(false);
 	if (isZooming)
@@ -376,6 +389,10 @@ void APlayer1::Swap3()
 		FPScamComp->SetFieldOfView(90);
 		_crosshairWidget->AddToViewport();
 	}
-	bUsingSniper = false;
-	bUsingRifle = false;
+}
+
+void APlayer1::AnimNotify_ThrowEnd()
+{
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayReadyGrenadeMontage();
 }
