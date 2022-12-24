@@ -19,13 +19,18 @@ AGrenade::AGrenade()
 	if (tempMesh.Succeeded())
 	{
 		meshComp->SetStaticMesh(tempMesh.Object);
+		meshComp->SetSimulatePhysics(true);
+		meshComp->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	}
 	//이동 컴포넌트
-	//movementComp = CreateAbstractDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
-	//movementComp->SetUpdatedComponent(meshComp);
-	//movementComp->InitialSpeed = 3000;
-	//movementComp->MaxSpeed = 3000;
-	//movementComp->ProjectileGravityScale = 0;
+	movementComp = CreateAbstractDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
+	movementComp->SetUpdatedComponent(meshComp);
+	movementComp->InitialSpeed = 1500;
+	movementComp->MaxSpeed = 1500;
+	movementComp->ProjectileGravityScale = 1;
+	movementComp->bShouldBounce = true;
+	movementComp->Bounciness = 0.3f;
+	movementComp->Friction = 1;
 }
 
 // Called when the game starts or when spawned
@@ -33,6 +38,18 @@ void AGrenade::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetWorld()->GetTimerManager().SetTimer(deathTimerHandle, this, &AGrenade::Die, 3, false);
+}
+
+// Called every frame
+void AGrenade::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+void AGrenade::Die()
+{
 	TArray<FHitResult> OutHits;
 	FVector MyLocation = GetActorLocation();
 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(500);
@@ -52,18 +69,6 @@ void AGrenade::BeginPlay()
 		}
 	}
 
-	GetWorld()->GetTimerManager().SetTimer(deathTimerHandle, this, &AGrenade::Die, 3, false);
-}
-
-// Called every frame
-void AGrenade::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AGrenade::Die()
-{
 	Destroy();
 }
 

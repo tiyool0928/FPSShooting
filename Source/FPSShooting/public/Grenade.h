@@ -27,9 +27,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		class UStaticMeshComponent* meshComp;				//총알 외관
-	//UPROPERTY(VisibleAnywhere)
-	//	class UProjectileMovementComponent* movementComp;	//이동 컴포넌트
+	UPROPERTY(VisibleAnywhere)
+		class UProjectileMovementComponent* movementComp;	//이동 컴포넌트
 
 	void Die();	//발사체 소멸
-
 };

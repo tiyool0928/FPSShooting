@@ -33,6 +33,8 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 		class UStaticMeshComponent* sniperMeshComp;				//스나이프메시 컴포넌트 등록
 	UPROPERTY(EditDefaultsOnly)
+		class UStaticMeshComponent* grenadeMeshComp;				//수류탄메시 컴포넌트 등록
+	UPROPERTY(EditDefaultsOnly)
 		class UArrowComponent* bulletArrow;							//총알 발사 방향, 위치
 
 	//좌우 입력 처리
@@ -75,6 +77,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
+	UPROPERTY(EditDefaultsOnly, Category = Factory)
+		TSubclassOf<class AGrenade> grenadeFactory;		//총알액터생성팩토리
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
@@ -96,4 +100,6 @@ public:
 	//노티파이 호출 함수
 	UFUNCTION(BluePrintCallable)
 		void AnimNotify_ThrowEnd();
+	UFUNCTION(BluePrintCallable)
+		void AnimNotify_ThrowGrenade();
 };

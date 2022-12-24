@@ -4,6 +4,7 @@
 #include "Player1.h"
 #include "PlayerAnim.h"
 #include "Bullet.h"
+#include "Grenade.h"
 #include "UI_SniperZoom.h"
 #include <Components/ArrowComponent.h>
 #include <GameFramework/CharacterMovementComponent.h>
@@ -67,6 +68,16 @@ APlayer1::APlayer1()
 		sniperMeshComp->SetStaticMesh(SnipeMesh.Object);
 		sniperMeshComp->SetRelativeLocationAndRotation(FVector(-5, -30, -4), FRotator(78, -55, 135));
 		sniperMeshComp->SetWorldScale3D(FVector(0.1f, 0.15f, 0.15f));
+	}
+	//수류탄mesh 컴포넌트
+	grenadeMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GrenadeMeshComp"));
+	grenadeMeshComp->SetupAttachment(GetMesh(), TEXT("RifleSocket_r"));
+	ConstructorHelpers::FObjectFinder<UStaticMesh> GrenadeMesh(TEXT("StaticMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/G67_Grenade/SM_G67.SM_G67'"));
+	if (GrenadeMesh.Succeeded())
+	{
+		grenadeMeshComp->SetStaticMesh(GrenadeMesh.Object);
+		grenadeMeshComp->SetRelativeLocationAndRotation(FVector(-1, -2, 3), FRotator(19, -442, 111));
+		grenadeMeshComp->SetWorldScale3D(FVector(0.1f, 0.15f, 0.15f));
 	}
 	//arrow 컴포넌트
 	bulletArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
@@ -234,14 +245,14 @@ void APlayer1::Fire()
 	FCollisionQueryParams params;		//충돌옵션 설정변수
 	params.AddIgnoredActor(this);		//본인 제외
 	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
-	
+
+	//총구 위치
+	FVector muzzle = bulletArrow->GetComponentLocation();
 	//라인트레이스가 히트되었을 경우
 	if (bHit)
 	{
 		if (bUsingRifle)
 		{
-			//총구 위치
-			FVector muzzle = bulletArrow->GetComponentLocation();
 			//타겟으로의 방향
 			FRotator targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.ImpactPoint);
 			//타겟 위치
@@ -257,8 +268,6 @@ void APlayer1::Fire()
 	{
 		if (bUsingRifle)
 		{
-			//총구 위치
-			FVector muzzle = bulletArrow->GetComponentLocation();
 			//타겟으로의 방향	(타겟이 없으므로 트레이스 끝 부분 지정)
 			FRotator targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.TraceEnd);
 			//타겟 위치
@@ -395,4 +404,40 @@ void APlayer1::AnimNotify_ThrowEnd()
 {
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->PlayReadyGrenadeMontage();
+}
+
+void APlayer1::AnimNotify_ThrowGrenade()
+{
+	FVector startPos;
+	FVector endPos;
+	if (FPScamComp->IsActive())	//FPS시점일 경우
+	{
+		startPos = FPScamComp->GetComponentLocation();
+		endPos = startPos + FPScamComp->GetForwardVector() * 5000;
+	}
+	else						//TPS시점일 경우
+	{
+		startPos = TPScamComp->GetComponentLocation();
+		endPos = startPos + TPScamComp->GetForwardVector() * 5000;
+	}
+
+	endPos.Z += 1000;		//트레이스보다 위쪽으로 던짐
+
+	FHitResult hitInfo;					//충돌 정보
+	FCollisionQueryParams params;		//충돌옵션 설정변수
+	params.AddIgnoredActor(this);		//본인 제외
+	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+
+	//오른손 위치
+	FVector rightHand = GetMesh()->GetSocketLocation(TEXT("RifleSocket_r"));
+	FRotator targetRot;
+	if (bHit)
+		//타겟으로의 방향
+		targetRot = UKismetMathLibrary::FindLookAtRotation(rightHand, hitInfo.ImpactPoint);
+	else
+		//트레이스 끝 방향
+		targetRot = UKismetMathLibrary::FindLookAtRotation(rightHand, hitInfo.TraceEnd);
+	//타겟 위치
+	FTransform target = UKismetMathLibrary::MakeTransform(rightHand, targetRot, FVector(1, 1, 1));
+	GetWorld()->SpawnActor<AGrenade>(grenadeFactory, target);
 }
