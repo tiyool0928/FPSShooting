@@ -148,6 +148,7 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Released, this, &APlayer1::OutputCrouch);
 	//총 발사 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::InputLeftMouse);
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &APlayer1::OutputThrowGrenade);
 	//카메라 시점 변경 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("ChangePerspective"), IE_Pressed, this, &APlayer1::ChangePerspective);
 	//저격총 스코프 사용/해제 입력 바인딩
@@ -220,7 +221,7 @@ void APlayer1::InputLeftMouse()
 	if (bUsingRifle || bUsingSniper)
 		Fire();
 	else
-		ThrowGrenade();
+		InputThrowGrenade();
 }
 
 void APlayer1::Fire()
@@ -298,12 +299,18 @@ void APlayer1::ChangePerspective()
 	}
 }
 
-void APlayer1::ThrowGrenade()
+void APlayer1::InputThrowGrenade()
 {
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-
-	anim->StopAllMontages(0);
 	anim->PlayThrowGrenadeMontage();
+	anim->Montage_JumpToSection(TEXT("ThrowGrenade1"), anim->ThrowGrenadeMontage);
+	//anim->StopAllMontages(0);
+}
+
+void APlayer1::OutputThrowGrenade()
+{
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->Montage_Resume(anim->ThrowGrenadeMontage);
 }
 
 void APlayer1::ZoomInOut()
@@ -438,4 +445,10 @@ void APlayer1::AnimNotify_ThrowGrenade()
 	//타겟 위치
 	FTransform target = UKismetMathLibrary::MakeTransform(rightHand, targetRot, FVector(1, 1, 1));
 	GetWorld()->SpawnActor<AGrenade>(grenadeFactory, target);
+}
+
+void APlayer1::AnimNotify_ThrowDivisionAction()
+{
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->Montage_Pause(anim->ThrowGrenadeMontage);
 }

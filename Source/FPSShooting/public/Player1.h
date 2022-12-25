@@ -59,7 +59,8 @@ public:
 	void InputLeftMouse();			//왼쪽 마우스 클릭
 	void Fire();					//총 발사
 	void ChangePerspective();		//카메라 시점 변경
-	void ThrowGrenade();			//수류탄 투척
+	void InputThrowGrenade();			//수류탄 투척 준비동작
+	void OutputThrowGrenade();			//수류탄 투척
 	//저격총 스코프 사용, 해제
 	void ZoomInOut();
 	//총 스왑 함수
@@ -102,4 +103,6 @@ public:
 		void AnimNotify_ThrowEnd();
 	UFUNCTION(BluePrintCallable)
 		void AnimNotify_ThrowGrenade();
+	UFUNCTION(BluePrintCallable)
+		void AnimNotify_ThrowDivisionAction();
 };
