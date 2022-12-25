@@ -198,8 +198,6 @@ void APlayer1::OutputRun()
 void APlayer1::InputJump()
 {
 	bPressedJump = true;
-	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-	anim->PlayJumpMontage();
 }
 
 void APlayer1::OutputJump()

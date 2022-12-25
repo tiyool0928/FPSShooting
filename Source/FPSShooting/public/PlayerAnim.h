@@ -27,6 +27,9 @@ public:
 	//플레이어가 앉아있는가
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		bool isCrouch = false;
+	//플레이어가 공중에 있는가
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		bool isInAir = false;
 
 	//수류탄을 들고있는가
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

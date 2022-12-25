@@ -3,6 +3,7 @@
 
 #include "PlayerAnim.h"
 #include "Player1.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UPlayerAnim::PlayJumpMontage()
@@ -43,6 +44,8 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		FVector velocity = player->GetVelocity();
 		//플레이어가 앉아있는가
 		isCrouch = player->bIsCrouched;
+		//플레이어가 공중에 있는가
+		isInAir = player->GetMovementComponent()->IsFalling();
 		//수류탄을 들고있는가
 		isSwap3 = player->bUsingGrenade;
 		//플레이어의 전방 벡터
