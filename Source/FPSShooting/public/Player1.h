@@ -80,6 +80,9 @@ public:
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class AGrenade> grenadeFactory;		//총알액터생성팩토리
+	
+	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
+		TSubclassOf<class UCameraShakeBase> cameraShake;
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
@@ -91,6 +94,8 @@ public:
 
 	float playerMaxHealth;			//최대체력
 	float playerHealth;				//현재체력
+	float rifleBullet = 10;			//소총 시작총알
+	float sniperBullet = 5;			//저격총 시작총알
 
 	bool isFPSPerspective = true;			//FPS카메라 시점 상태인가?
 	bool isZooming = false;					//저격총 스코프를 사용하고 있는 상태인가?

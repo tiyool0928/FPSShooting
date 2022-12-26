@@ -13,12 +13,12 @@ ABullet::ABullet()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	//충돌체 컴포넌트
-	boxComp = CreateAbstractDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
+	boxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	SetRootComponent(boxComp);
 	boxComp->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	boxComp->SetBoxExtent(FVector(3, 1, 1));
 	//외관 컴포넌트
-	meshComp = CreateAbstractDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	meshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	meshComp->SetupAttachment(boxComp);
 	meshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);	//외관은 nocollision
 	ConstructorHelpers::FObjectFinder<UStaticMesh> tempMesh(TEXT("StaticMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/Ammunition/SM_Shell_545x39.SM_Shell_545x39'"));
@@ -28,7 +28,7 @@ ABullet::ABullet()
 		meshComp->SetRelativeLocationAndRotation(FVector(-0.5f, 0, 0), FRotator(0, -90, 0));
 	}
 	//이동 컴포넌트
-	movementComp = CreateAbstractDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
+	movementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
 	movementComp->SetUpdatedComponent(boxComp);
 	movementComp->InitialSpeed = 3000;
 	movementComp->MaxSpeed = 3000;
