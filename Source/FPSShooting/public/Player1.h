@@ -58,6 +58,7 @@ public:
 	void OutputCrouch();			//앉기 Release
 	void InputLeftMouse();			//왼쪽 마우스 클릭
 	void Fire();					//총 발사
+	void Reload();					//장전
 	void ChangePerspective();		//카메라 시점 변경
 	void InputThrowGrenade();			//수류탄 투척 준비동작
 	void OutputThrowGrenade();			//수류탄 투척
@@ -68,11 +69,11 @@ public:
 	void Swap2();
 	void Swap3();
 
-	class UUserWidget* _crosshairWidget;
+	class UUI_Player* _playerWidget;
 	class UUI_SniperZoom* _zoomWidget;
 
 	UPROPERTY(EditDefaultsOnly, Category = UI)
-		TSubclassOf<UUserWidget> crosshairWidget;			//Crosshair UI
+		TSubclassOf<UUserWidget> playerWidget;			//Crosshair UI
 	UPROPERTY(EditDefaultsOnly, Category = UI)
 		TSubclassOf<UUserWidget> zoomWidget;			//Zoom UI
 
@@ -94,14 +95,20 @@ public:
 
 	float playerMaxHealth;			//최대체력
 	float playerHealth;				//현재체력
-	float rifleBullet = 10;			//소총 시작총알
-	float sniperBullet = 5;			//저격총 시작총알
+	float rifleBullet = 30;
+	float keepRifleBullet = 360;		//소총 총알 여분
+	float sniperBullet = 5;
+	float keepSniperBullet = 25;			//저격총 총알 여분
+	float grenadeAmmo = 1;
+	float keepGrenadeAmmo = 1;			//수류탄 여분
 
 	bool isFPSPerspective = true;			//FPS카메라 시점 상태인가?
 	bool isZooming = false;					//저격총 스코프를 사용하고 있는 상태인가?
 	bool bUsingRifle = true;				//소총을 든 상태인가?
 	bool bUsingSniper = false;				//저격총을 든 상태인가?
 	bool bUsingGrenade = false;				//수류탄을 든 상태인가?
+	bool isLeftMouseReleased = false;		//왼쪽마우스를 누르고 있는 상태인가?
+	bool isStandbyGrenade = false;			//수류탄 던질 준비 완료한 상태
 
 	//노티파이 호출 함수
 	UFUNCTION(BluePrintCallable)
@@ -110,4 +117,6 @@ public:
 		void AnimNotify_ThrowGrenade();
 	UFUNCTION(BluePrintCallable)
 		void AnimNotify_ThrowDivisionAction();
+	UFUNCTION(BluePrintCallable)
+		void AnimNotify_ReloadComplete();
 };

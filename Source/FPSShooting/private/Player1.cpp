@@ -6,6 +6,7 @@
 #include "Bullet.h"
 #include "Grenade.h"
 #include "UI_SniperZoom.h"
+#include "UI_Player.h"
 #include <Components/ArrowComponent.h>
 #include <GameFramework/CharacterMovementComponent.h>
 #include <GameFramework/SpringArmComponent.h>
@@ -87,6 +88,7 @@ APlayer1::APlayer1()
 	//체력 초기화
 	playerMaxHealth = 100;
 	playerHealth = playerMaxHealth;
+
 	//플레이어 앉기 세팅
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->SetCrouchedHalfHeight(60);
@@ -103,18 +105,21 @@ void APlayer1::BeginPlay()
 	//시작 시 소총으로 시작
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
+	grenadeMeshComp->SetVisibility(false);
 	//일반 크로스헤어, 스코프 위젯 생성
 	if (IsValid(zoomWidget))
 	{
 		_zoomWidget = Cast<UUI_SniperZoom>(CreateWidget(GetWorld(), zoomWidget));
 		_zoomWidget->SetOwnerPlayer(this);
 	}
-	if (IsValid(crosshairWidget))
-		_crosshairWidget = CreateWidget(GetWorld(), crosshairWidget);
-
-	if (_crosshairWidget != nullptr)
-		_crosshairWidget->AddToViewport();
-		
+	if (IsValid(playerWidget))
+	{
+		_playerWidget = Cast<UUI_Player>(CreateWidget(GetWorld(), playerWidget));
+		_playerWidget->SetOwnerPlayer(this);
+		_playerWidget->AddToViewport();
+		_playerWidget->UpdeateHealthBar();
+		_playerWidget->UpdateAmmoBySwap();
+	}
 }
 
 // Called every frame
@@ -150,6 +155,8 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	//총 발사 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::InputLeftMouse);
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &APlayer1::OutputThrowGrenade);
+	//장전 입력 바인딩
+	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &APlayer1::Reload);
 	//카메라 시점 변경 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("ChangePerspective"), IE_Pressed, this, &APlayer1::ChangePerspective);
 	//저격총 스코프 사용/해제 입력 바인딩
@@ -219,6 +226,8 @@ void APlayer1::OutputCrouch()
 
 void APlayer1::InputLeftMouse()
 {
+	isLeftMouseReleased = true;
+
 	if (bUsingRifle || bUsingSniper)
 		Fire();
 	else
@@ -334,7 +343,14 @@ void APlayer1::Fire()
 		}
 	}
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
+}
+
+void APlayer1::Reload()
+{
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayReloadMontage();
 }
 
 void APlayer1::ChangePerspective()
@@ -358,6 +374,8 @@ void APlayer1::ChangePerspective()
 
 void APlayer1::InputThrowGrenade()
 {
+	if (grenadeAmmo <= 0)	//수류탄없으면 X
+		return;
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->PlayThrowGrenadeMontage();
 	anim->Montage_JumpToSection(TEXT("ThrowGrenade1"), anim->ThrowGrenadeMontage);
@@ -366,8 +384,24 @@ void APlayer1::InputThrowGrenade()
 
 void APlayer1::OutputThrowGrenade()
 {
-	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-	anim->Montage_Resume(anim->ThrowGrenadeMontage);
+	isLeftMouseReleased = false;
+
+	if (isStandbyGrenade && !isLeftMouseReleased)
+	{
+		auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+		anim->Montage_Resume(anim->ThrowGrenadeMontage);
+		if (grenadeAmmo > 0)
+		{
+			grenadeAmmo--;
+			if (keepGrenadeAmmo > 0)
+			{
+				grenadeAmmo += 1;
+				keepGrenadeAmmo -= 1;
+			}
+		}
+		_playerWidget->UpdateAmmoBySwap();
+		isStandbyGrenade = false;
+	}
 }
 
 void APlayer1::ZoomInOut()
@@ -385,7 +419,7 @@ void APlayer1::ZoomInOut()
 			//스코프 UI 화면 출력
 			_zoomWidget->AddToViewport();
 			FPScamComp->SetFieldOfView(45);
-			_crosshairWidget->RemoveFromParent();
+			_playerWidget->RemoveFromParent();
 		}
 		else
 		{
@@ -398,7 +432,8 @@ void APlayer1::ZoomInOut()
 			isZooming = false;
 			//크로스헤어 UI 화면 출력
 			_zoomWidget->RemoveFromParent();
-			_crosshairWidget->AddToViewport();
+			_playerWidget->AddToViewport();
+			_playerWidget->UpdateAmmoBySwap();
 		}
 	}
 }
@@ -411,6 +446,7 @@ void APlayer1::Swap1()
 
 	rifleMeshComp->SetVisibility(true);
 	sniperMeshComp->SetVisibility(false);
+	grenadeMeshComp->SetVisibility(false);
 	if (isZooming)
 	{
 		if (!isFPSPerspective)		//TPS카메라 상태이면 다시 TPS카메라 시점으로 변경
@@ -422,8 +458,9 @@ void APlayer1::Swap1()
 		//크로스헤어 UI 화면 출력
 		_zoomWidget->RemoveFromParent();
 		FPScamComp->SetFieldOfView(90);
-		_crosshairWidget->AddToViewport();
+		_playerWidget->AddToViewport();
 	}
+	_playerWidget->UpdateAmmoBySwap();
 }
 
 void APlayer1::Swap2()
@@ -434,6 +471,8 @@ void APlayer1::Swap2()
 
 	rifleMeshComp->SetVisibility(false);
 	sniperMeshComp->SetVisibility(true);
+	grenadeMeshComp->SetVisibility(false);
+	_playerWidget->UpdateAmmoBySwap();
 }
 
 void APlayer1::Swap3()
@@ -447,6 +486,10 @@ void APlayer1::Swap3()
 
 	rifleMeshComp->SetVisibility(false);
 	sniperMeshComp->SetVisibility(false);
+	if (grenadeAmmo > 0)
+	{
+		grenadeMeshComp->SetVisibility(true);
+	}
 	if (isZooming)
 	{
 		if (!isFPSPerspective)		//TPS카메라 상태이면 다시 TPS카메라 시점으로 변경
@@ -458,14 +501,16 @@ void APlayer1::Swap3()
 		//크로스헤어 UI 화면 출력
 		_zoomWidget->RemoveFromParent();
 		FPScamComp->SetFieldOfView(90);
-		_crosshairWidget->AddToViewport();
 	}
+	_playerWidget->UpdateAmmoBySwap();
 }
 
 void APlayer1::AnimNotify_ThrowEnd()
 {
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->PlayReadyGrenadeMontage();
+	if (grenadeAmmo <= 0)
+		grenadeMeshComp->SetVisibility(false);
 }
 
 void APlayer1::AnimNotify_ThrowGrenade()
@@ -508,4 +553,56 @@ void APlayer1::AnimNotify_ThrowDivisionAction()
 {
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->Montage_Pause(anim->ThrowGrenadeMontage);
+	isStandbyGrenade = true;
+
+	if (isStandbyGrenade && !isLeftMouseReleased)
+	{
+		anim->Montage_Resume(anim->ThrowGrenadeMontage);
+		if (grenadeAmmo > 0)
+		{
+			grenadeAmmo--;
+			if (keepGrenadeAmmo > 0)
+			{
+				grenadeAmmo += 1;
+				keepGrenadeAmmo -= 1;
+			}
+		}
+		_playerWidget->UpdateAmmoBySwap();
+		isStandbyGrenade = false;
+	}
+}
+
+void APlayer1::AnimNotify_ReloadComplete()
+{
+	if (bUsingRifle)
+	{
+		if (keepRifleBullet <= 0) return;
+		float needBullet = 30 - rifleBullet;
+		if (needBullet >= keepRifleBullet)
+		{
+			rifleBullet += keepRifleBullet;
+			keepRifleBullet = 0;
+		}
+		else
+		{
+			rifleBullet += needBullet;
+			keepRifleBullet -= needBullet;
+		}
+	}
+	else if (bUsingSniper)
+	{
+		if (keepSniperBullet <= 0) return;
+		float needBullet = 5 - sniperBullet;
+		if (needBullet >= keepSniperBullet)
+		{
+			sniperBullet += keepSniperBullet;
+			keepSniperBullet = 0;
+		}
+		else
+		{
+			sniperBullet += needBullet;
+			keepSniperBullet -= needBullet;
+		}
+	}
+	_playerWidget->UpdateAmmoBySwap();
 }

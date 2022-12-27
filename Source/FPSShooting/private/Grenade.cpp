@@ -12,7 +12,7 @@ AGrenade::AGrenade()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	//외관 컴포넌트
-	meshComp = CreateAbstractDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	meshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	SetRootComponent(meshComp);
 	meshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);	//외관은 nocollision
 	ConstructorHelpers::FObjectFinder<UStaticMesh> tempMesh(TEXT("StaticMesh'/Game/FPS_Weapon_Bundle/Weapons/Meshes/G67_Grenade/SM_G67.SM_G67'"));
@@ -23,7 +23,7 @@ AGrenade::AGrenade()
 		meshComp->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	}
 	//이동 컴포넌트
-	movementComp = CreateAbstractDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
+	movementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
 	movementComp->SetUpdatedComponent(meshComp);
 	movementComp->InitialSpeed = 1500;
 	movementComp->MaxSpeed = 1500;
