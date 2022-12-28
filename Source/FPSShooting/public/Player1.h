@@ -57,11 +57,13 @@ public:
 	void InputCrouch();				//앉기 Press
 	void OutputCrouch();			//앉기 Release
 	void InputLeftMouse();			//왼쪽 마우스 클릭
-	void Fire();					//총 발사
+	void RifleFire();				//소총 발사
+	void FireSpeedControl();		//소총 연사 속도 제어
+	void SniperFire();				//저격총 발사
 	void Reload();					//장전
 	void ChangePerspective();		//카메라 시점 변경
 	void InputThrowGrenade();			//수류탄 투척 준비동작
-	void OutputThrowGrenade();			//수류탄 투척
+	void OutputLeftMouse();			//수류탄 투척
 	//저격총 스코프 사용, 해제
 	void ZoomInOut();
 	//총 스왑 함수
@@ -84,6 +86,8 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
 		TSubclassOf<class UCameraShakeBase> cameraShake;
+
+	FTimerHandle FireSpeedTimerHandle;					//연사속도제어타이머
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
@@ -109,6 +113,7 @@ public:
 	bool bUsingGrenade = false;				//수류탄을 든 상태인가?
 	bool isLeftMouseReleased = false;		//왼쪽마우스를 누르고 있는 상태인가?
 	bool isStandbyGrenade = false;			//수류탄 던질 준비 완료한 상태
+	bool rifleFireSpeedControl = false;		//소총 연사 속도 제어 변수
 
 	//노티파이 호출 함수
 	UFUNCTION(BluePrintCallable)

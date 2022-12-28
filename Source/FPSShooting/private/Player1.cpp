@@ -48,7 +48,7 @@ APlayer1::APlayer1()
 	FPScamComp = CreateDefaultSubobject<UCameraComponent>(TEXT("fpsCamComp"));
 	FPScamComp->SetupAttachment(GetMesh(), TEXT("head"));
 	FPScamComp->bUsePawnControlRotation = true;		//카메라 폰 제어
-	FPScamComp->SetAutoActivate(true);				//FPS카메라부터 활성화
+	FPScamComp->SetAutoActivate(true);				//FPS카메라부터 활성화		
 
 	bUseControllerRotationYaw = true;					//클래스디폴트 Yaw 설정
 
@@ -111,6 +111,8 @@ void APlayer1::BeginPlay()
 	{
 		_zoomWidget = Cast<UUI_SniperZoom>(CreateWidget(GetWorld(), zoomWidget));
 		_zoomWidget->SetOwnerPlayer(this);
+		_zoomWidget->AddToViewport();
+		_zoomWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	if (IsValid(playerWidget))
 	{
@@ -126,8 +128,14 @@ void APlayer1::BeginPlay()
 void APlayer1::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	Move();					//캐릭터 이동 함수
+
+	if (isLeftMouseReleased && bUsingRifle && !rifleFireSpeedControl)
+	{
+		RifleFire();
+		rifleFireSpeedControl = true;
+		GetWorld()->GetTimerManager().SetTimer(FireSpeedTimerHandle, this, &APlayer1::FireSpeedControl, 0.1f, false);
+	}
 }
 
 // Called to bind functionality to input
@@ -154,7 +162,7 @@ void APlayer1::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Released, this, &APlayer1::OutputCrouch);
 	//총 발사 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &APlayer1::InputLeftMouse);
-	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &APlayer1::OutputThrowGrenade);
+	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &APlayer1::OutputLeftMouse);
 	//장전 입력 바인딩
 	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &APlayer1::Reload);
 	//카메라 시점 변경 입력 바인딩
@@ -228,14 +236,20 @@ void APlayer1::InputLeftMouse()
 {
 	isLeftMouseReleased = true;
 
-	if (bUsingRifle || bUsingSniper)
-		Fire();
+	if (bUsingSniper)
+		SniperFire();
 	else
 		InputThrowGrenade();
 }
 
-void APlayer1::Fire()
+void APlayer1::RifleFire()
 {
+	if (rifleBullet <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("rifleBullet Empty"));
+		return;
+	}
+
 	FVector startPos;
 	FVector endPos;
 	if (FPScamComp->IsActive())	//FPS시점일 경우
@@ -257,91 +271,77 @@ void APlayer1::Fire()
 
 	//총구 위치
 	FVector muzzle = bulletArrow->GetComponentLocation();
+	//타겟으로의 방향
+	FRotator targetRot;
+	//타겟 위치
+	FTransform target;
+
 	//라인트레이스가 히트되었을 경우
 	if (bHit)
 	{
-		if (bUsingRifle)
-		{
-			if (rifleBullet > 0)
-			{
-				//타겟으로의 방향
-				FRotator targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.ImpactPoint);
-				//타겟 위치
-				FTransform target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
-				GetWorld()->SpawnActor<ABullet>(bulletFactory, target);
-				rifleBullet--;
-				//반동 구현
-				AddControllerPitchInput(FMath::FRandRange(-0.5f, -0.3f));
-				AddControllerYawInput(FMath::FRandRange(-0.5f, 0.5f));
-				UE_LOG(LogTemp, Warning, TEXT("rifleBullet: %f"), rifleBullet);
-			}
-			else
-			{
-				//
-				UE_LOG(LogTemp, Warning, TEXT("rifleBullet Empty"));
-			}
-		}
-		else if (bUsingSniper)
-		{
-			if (sniperBullet > 0)
-			{
-				DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.ImpactPoint, FColor::Red, false, 3, (uint8)0U, 1.5f);
-				GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(cameraShake);
-				sniperBullet--;
-				//반동 구현
-				AddControllerPitchInput(FMath::FRandRange(-0.5f, -0.3f));
-				AddControllerYawInput(FMath::FRandRange(-0.5f, 0.5f));
-				UE_LOG(LogTemp, Warning, TEXT("sniperBullet: %f"), sniperBullet);
-			}
-			else
-			{
-				//
-				UE_LOG(LogTemp, Warning, TEXT("sniperBullet Empty"));
-			}
-		}
+		targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.ImpactPoint);
+		target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
 	}
 	else
 	{
-		if (bUsingRifle)
-		{
-			if (rifleBullet > 0)
-			{
-				//타겟으로의 방향	(타겟이 없으므로 트레이스 끝 부분 지정)
-				FRotator targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.TraceEnd);
-				//타겟 위치
-				FTransform target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
-				GetWorld()->SpawnActor<ABullet>(bulletFactory, target);
-				rifleBullet--;
-				//반동 구현
-				AddControllerPitchInput(FMath::FRandRange(-0.5f, -0.3f));
-				AddControllerYawInput(FMath::FRandRange(-0.5f, 0.5f));
-				UE_LOG(LogTemp, Warning, TEXT("rifleBullet: %f"), rifleBullet);
-			}
-			else
-			{
-				//
-				UE_LOG(LogTemp, Warning, TEXT("rifleBullet Empty"));
-			}
-		}
-		else if (bUsingSniper)
-		{
-			if (sniperBullet > 0)
-			{
-				DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.TraceEnd, FColor::Green, false, 3, (uint8)0U, 1.5f);
-				GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(cameraShake);
-				sniperBullet--;
-				//반동 구현
-				AddControllerPitchInput(FMath::FRandRange(-0.5f, -0.3f));
-				AddControllerYawInput(FMath::FRandRange(-0.5f, 0.5f));
-				UE_LOG(LogTemp, Warning, TEXT("sniperBullet: %f"), sniperBullet);
-			}
-			else
-			{
-				//
-				UE_LOG(LogTemp, Warning, TEXT("sniperBullet Empty"));
-			}
-		}
+		//타겟이 없으므로 트레이스 끝부분 지정
+		targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.TraceEnd);
+		target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
 	}
+	GetWorld()->SpawnActor<ABullet>(bulletFactory, target);
+	rifleBullet--;
+	//반동 구현
+	AddControllerPitchInput(FMath::FRandRange(-0.5f, -0.3f));
+	AddControllerYawInput(FMath::FRandRange(-0.5f, 0.5f));
+
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	_playerWidget->UpdateAmmoByFire();
+	anim->PlayFireMontage();
+}
+
+void APlayer1::FireSpeedControl()
+{
+	GetWorld()->GetTimerManager().ClearTimer(FireSpeedTimerHandle);
+	rifleFireSpeedControl = false;
+}
+
+void APlayer1::SniperFire()
+{
+	if (sniperBullet <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("sniperBullet: %f"), sniperBullet);
+		return;
+	}
+
+	FVector startPos;
+	FVector endPos;
+	if (FPScamComp->IsActive())	//FPS시점일 경우
+	{
+		startPos = FPScamComp->GetComponentLocation();
+		endPos = startPos + FPScamComp->GetForwardVector() * 5000;
+	}
+	else						//TPS시점일 경우
+	{
+		startPos = TPScamComp->GetComponentLocation();
+		endPos = startPos + TPScamComp->GetForwardVector() * 5000;
+	}
+	FHitResult hitInfo;					//충돌 정보
+	FCollisionQueryParams params;		//충돌옵션 설정변수
+	params.AddIgnoredActor(this);		//본인 제외
+	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+
+	//라인트레이스가 히트되었을 경우
+	if (bHit)
+	{
+		DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.ImpactPoint, FColor::Red, false, 3, (uint8)0U, 1.5f);
+	}
+	else
+	{
+		DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.TraceEnd, FColor::Green, false, 3, (uint8)0U, 1.5f);
+	}
+	GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(cameraShake);
+	sniperBullet--;
+
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
@@ -382,25 +382,27 @@ void APlayer1::InputThrowGrenade()
 	//anim->StopAllMontages(0);
 }
 
-void APlayer1::OutputThrowGrenade()
+void APlayer1::OutputLeftMouse()
 {
 	isLeftMouseReleased = false;
-
-	if (isStandbyGrenade && !isLeftMouseReleased)
+	if (bUsingGrenade)
 	{
-		auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-		anim->Montage_Resume(anim->ThrowGrenadeMontage);
-		if (grenadeAmmo > 0)
+		if (isStandbyGrenade && !isLeftMouseReleased)
 		{
-			grenadeAmmo--;
-			if (keepGrenadeAmmo > 0)
+			auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+			anim->Montage_Resume(anim->ThrowGrenadeMontage);
+			if (grenadeAmmo > 0)
 			{
-				grenadeAmmo += 1;
-				keepGrenadeAmmo -= 1;
+				grenadeAmmo--;
+				if (keepGrenadeAmmo > 0)
+				{
+					grenadeAmmo += 1;
+					keepGrenadeAmmo -= 1;
+				}
 			}
+			_playerWidget->UpdateAmmoBySwap();
+			isStandbyGrenade = false;
 		}
-		_playerWidget->UpdateAmmoBySwap();
-		isStandbyGrenade = false;
 	}
 }
 
@@ -417,13 +419,25 @@ void APlayer1::ZoomInOut()
 			}
 			isZooming = true;
 			//스코프 UI 화면 출력
-			_zoomWidget->AddToViewport();
-			FPScamComp->SetFieldOfView(45);
-			_playerWidget->RemoveFromParent();
+			if (_zoomWidget != nullptr)
+			{
+				_zoomWidget->SetVisibility(ESlateVisibility::Visible);
+			}
+			if (FPScamComp)
+			{
+				FPScamComp->FieldOfView = 45.0f;
+			}
+			if (_playerWidget != nullptr)
+			{
+				_playerWidget->SetVisibility(ESlateVisibility::Collapsed);
+			}
 		}
 		else
 		{
-			FPScamComp->SetFieldOfView(90);
+			if (FPScamComp)
+			{
+				FPScamComp->FieldOfView = 90.0f;
+			}
 			if (!isFPSPerspective)		//TPS카메라 상태이면 다시 TPS카메라 시점으로 변경
 			{
 				FPScamComp->SetActive(false);
@@ -431,15 +445,22 @@ void APlayer1::ZoomInOut()
 			}
 			isZooming = false;
 			//크로스헤어 UI 화면 출력
-			_zoomWidget->RemoveFromParent();
-			_playerWidget->AddToViewport();
-			_playerWidget->UpdateAmmoBySwap();
+			if (_zoomWidget != nullptr)
+			{
+				_zoomWidget->SetVisibility(ESlateVisibility::Collapsed);
+			}
+			if (_playerWidget != nullptr)
+			{
+				_playerWidget->SetVisibility(ESlateVisibility::Visible);
+			}
 		}
 	}
 }
 
 void APlayer1::Swap1()
 {
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->StopAllMontages(0);
 	bUsingRifle = true;
 	bUsingSniper = false;
 	bUsingGrenade = false;
@@ -457,7 +478,7 @@ void APlayer1::Swap1()
 		isZooming = false;
 		//크로스헤어 UI 화면 출력
 		_zoomWidget->RemoveFromParent();
-		FPScamComp->SetFieldOfView(90);
+		FPScamComp->FieldOfView = 90.0f;
 		_playerWidget->AddToViewport();
 	}
 	_playerWidget->UpdateAmmoBySwap();
@@ -465,6 +486,8 @@ void APlayer1::Swap1()
 
 void APlayer1::Swap2()
 {
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->StopAllMontages(0);
 	bUsingSniper = true;
 	bUsingRifle = false;
 	bUsingGrenade = false;
@@ -477,11 +500,12 @@ void APlayer1::Swap2()
 
 void APlayer1::Swap3()
 {
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->StopAllMontages(0);
 	bUsingSniper = false;
 	bUsingRifle = false;
 	bUsingGrenade = true;
 
-	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->PlayReadyGrenadeMontage();
 
 	rifleMeshComp->SetVisibility(false);
@@ -500,7 +524,7 @@ void APlayer1::Swap3()
 		isZooming = false;
 		//크로스헤어 UI 화면 출력
 		_zoomWidget->RemoveFromParent();
-		FPScamComp->SetFieldOfView(90);
+		FPScamComp->FieldOfView = 90.0f;
 	}
 	_playerWidget->UpdateAmmoBySwap();
 }
