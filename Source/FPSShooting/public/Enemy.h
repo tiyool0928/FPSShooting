@@ -27,6 +27,6 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
-
+	float walkSpeed = 200;
 
 };

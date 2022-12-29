@@ -374,12 +374,14 @@ void APlayer1::ChangePerspective()
 
 void APlayer1::InputThrowGrenade()
 {
-	if (grenadeAmmo <= 0)	//수류탄없으면 X
-		return;
-	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-	anim->PlayThrowGrenadeMontage();
-	anim->Montage_JumpToSection(TEXT("ThrowGrenade1"), anim->ThrowGrenadeMontage);
-	//anim->StopAllMontages(0);
+	if (bUsingGrenade)
+	{
+		if (grenadeAmmo <= 0)	//수류탄없으면 X
+			return;
+		auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+		anim->PlayThrowGrenadeMontage();
+		//anim->StopAllMontages(0);
+	}
 }
 
 void APlayer1::OutputLeftMouse()

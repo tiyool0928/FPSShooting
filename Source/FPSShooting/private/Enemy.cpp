@@ -2,6 +2,7 @@
 
 
 #include "Enemy.h"
+#include <GameFramework/CharacterMovementComponent.h>
 
 // Sets default values
 AEnemy::AEnemy()
@@ -16,6 +17,9 @@ AEnemy::AEnemy()
 		//컴포넌트 위치 (0, 0, -90) 회전 (0, -90, 0)
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90), FRotator(0, -90, 0));
 	}
+	//자연스러운 회전
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 // Called when the game starts or when spawned
@@ -23,6 +27,7 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 }
 
 // Called every frame
