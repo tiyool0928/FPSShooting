@@ -15,6 +15,22 @@ UBTS_TargetLocation::UBTS_TargetLocation()
 
 void UBTS_TargetLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	auto target = Cast<APlayer1>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AEnemyAIController::PlayerKey));
-	OwnerComp.GetBlackboardComponent()->SetValueAsVector(TEXT("TargetPos"), target->GetActorLocation());
+	auto me = Cast<AEnemy>(OwnerComp.GetAIOwner()->GetPawn());
+	if (me == nullptr)
+	{
+		return;
+	}
+	float rotGap = OwnerComp.GetBlackboardComponent()->GetValueAsFloat(AEnemyAIController::TargetRotKey);
+	if (rotGap > 10)
+	{
+		me->TurnToLeft();
+	}
+	else if (rotGap < -10)
+	{
+		me->TurnToRight();
+	}
+	else
+	{
+		me->GetMesh()->GetAnimInstance()->StopAllMontages(0);
+	}
 }

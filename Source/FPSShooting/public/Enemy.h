@@ -27,6 +27,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
+	void TurnToLeft();		//왼쪽으로 도는 애니메이션
+	void TurnToRight();		//오른쪽으로 도는 애니메이션
+
 	float walkSpeed = 200;
+	bool detecting = false;
 
 };

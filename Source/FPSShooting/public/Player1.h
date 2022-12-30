@@ -36,6 +36,13 @@ public:
 		class UStaticMeshComponent* grenadeMeshComp;				//수류탄메시 컴포넌트 등록
 	UPROPERTY(EditDefaultsOnly)
 		class UArrowComponent* bulletArrow;							//총알 발사 방향, 위치
+	UPROPERTY(EditDefaultsOnly)
+		class USoundBase* rifleFireSound;							//소총 사격 사운드
+	UPROPERTY(EditDefaultsOnly)
+		class USoundBase* rifleReloadSound;							//소총 장전 사운드
+	UPROPERTY(EditDefaultsOnly)
+		class USoundBase* sniperFireSound;							//저격총 사격 사운드
+
 
 	//좌우 입력 처리
 	void Turn(float value);
@@ -124,4 +131,6 @@ public:
 		void AnimNotify_ThrowDivisionAction();
 	UFUNCTION(BluePrintCallable)
 		void AnimNotify_ReloadComplete();
+	UFUNCTION(BluePrintCallable)
+		void AnimNotify_PlayReloadSound();
 };

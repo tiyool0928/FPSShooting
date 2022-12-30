@@ -2,6 +2,7 @@
 
 
 #include "Enemy.h"
+#include "EnemyAnim.h"
 #include <GameFramework/CharacterMovementComponent.h>
 
 // Sets default values
@@ -41,6 +42,17 @@ void AEnemy::Tick(float DeltaTime)
 void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
 
+void AEnemy::TurnToLeft()
+{
+	auto anim = Cast<UEnemyAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayTurnLeftMontage();
+}
+
+void AEnemy::TurnToRight()
+{
+	auto anim = Cast<UEnemyAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayTurnRightMontage();
 }
 

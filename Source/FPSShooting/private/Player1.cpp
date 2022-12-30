@@ -13,6 +13,8 @@
 #include <Camera/CameraComponent.h>
 #include <Kismet/KismetMathLibrary.h>
 #include <Math/UnrealMathUtility.h>
+#include <Kismet/GameplayStatics.h>
+#include <Sound/SoundBase.h>
 
 // Sets default values
 APlayer1::APlayer1()
@@ -297,6 +299,7 @@ void APlayer1::RifleFire()
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
+	UGameplayStatics::SpawnSoundAtLocation(this, rifleFireSound, muzzle);
 }
 
 void APlayer1::FireSpeedControl()
@@ -345,6 +348,7 @@ void APlayer1::SniperFire()
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
+	UGameplayStatics::SpawnSoundAtLocation(this, sniperFireSound, GetActorLocation());
 }
 
 void APlayer1::Reload()
@@ -631,4 +635,9 @@ void APlayer1::AnimNotify_ReloadComplete()
 		}
 	}
 	_playerWidget->UpdateAmmoBySwap();
+}
+
+void APlayer1::AnimNotify_PlayReloadSound()
+{
+	UGameplayStatics::SpawnSoundAtLocation(this, rifleReloadSound, GetActorLocation());
 }

@@ -3,6 +3,7 @@
 
 #include "EnemyAIController.h"
 #include "Player1.h"
+#include "Enemy.h"
 #include "NavigationSystem.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "BehaviorTree/BehaviorTree.h"
@@ -16,8 +17,10 @@ const FName AEnemyAIController::HomePosKey(TEXT("HomePos"));
 const FName AEnemyAIController::PatrolPosKey(TEXT("PatrolPos"));
 const FName AEnemyAIController::CanSeePlayerKey(TEXT("CanSeePlayer"));
 const FName AEnemyAIController::PlayerKey(TEXT("Target"));
+const FName AEnemyAIController::IsNarrowRotGapKey(TEXT("IsNarrowRotGap"));
+const FName AEnemyAIController::TargetRotKey(TEXT("TargetRot"));
 
-AEnemyAIController::AEnemyAIController()
+AEnemyAIController::AEnemyAIController(FObjectInitializer const& object_initializer)
 {
 	static ConstructorHelpers::FObjectFinder<UBlackboardData> BBObject(TEXT("BlackboardData'/Game/Enemy/BB_Enemy.BB_Enemy'"));
 	if (BBObject.Succeeded())
@@ -29,6 +32,8 @@ AEnemyAIController::AEnemyAIController()
 	{
 		BTAsset = BTObject.Object;
 	}
+
+	BTComp = object_initializer.CreateDefaultSubobject<UBehaviorTreeComponent>(this, TEXT("BehaviorComp"));
 
 	SetPerceptionComponent(*CreateOptionalDefaultSubobject<UAIPerceptionComponent>(TEXT("AI Perception")));
 	SightConfig = CreateOptionalDefaultSubobject<UAISenseConfig_Sight>(TEXT("Sight Config"));
@@ -67,5 +72,17 @@ void AEnemyAIController::OnTargetDetected(AActor* actor, FAIStimulus const Stimu
 		//플레이어를 감지하면 true값을 넣어준다.
 		BlackboardComp->SetValueAsBool(TEXT("CanSeePlayer"), Stimulus.WasSuccessfullySensed());
 		BlackboardComp->SetValueAsObject(TEXT("Target"), player);
+		auto me = Cast<AEnemy>(BTComp->GetAIOwner()->GetPawn());
+
+		if (Stimulus.WasSuccessfullySensed())
+		{
+			me->detecting = true;
+			UE_LOG(LogTemp, Warning, TEXT("true"));
+		}
+		else
+		{
+			me->detecting = false;
+			UE_LOG(LogTemp, Warning, TEXT("false"));
+		}
 	}
 }

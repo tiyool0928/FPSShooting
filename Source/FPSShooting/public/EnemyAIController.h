@@ -29,7 +29,7 @@ private:
 		class UAISenseConfig_Sight* SightConfig;
 
 public:
-	AEnemyAIController();
+	AEnemyAIController(FObjectInitializer const& object_initializer);
 	virtual void OnPossess(APawn* InPawn) override;				//폰에 AIController를 바인딩
 	UFUNCTION()		//플레이어 발견 시 key값 부여
 		void OnTargetDetected(AActor* actor, FAIStimulus const Stimulus);
@@ -49,4 +49,6 @@ public:
 	static const FName PatrolPosKey;							//이동할 위치
 	static const FName CanSeePlayerKey;							//플레이어를 찾았는가
 	static const FName PlayerKey;								//플레이어 위치
+	static const FName TargetRotKey;							//본인과 플레이어간의 각도
+	static const FName IsNarrowRotGapKey;						//본인이 타겟을 바라보았는가
 };
