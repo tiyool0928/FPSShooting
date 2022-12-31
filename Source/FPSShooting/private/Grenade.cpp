@@ -4,6 +4,8 @@
 #include "Grenade.h"
 #include "DrawDebugHelpers.h"
 #include "Player1.h"
+#include <Sound/SoundBase.h>
+#include <Kismet/GameplayStatics.h>
 #include <GameFramework/ProjectileMovementComponent.h>
 
 // Sets default values
@@ -65,6 +67,7 @@ void AGrenade::Die()
 			if (MeshComp)
 			{
 				MeshComp->AddRadialImpulse(MyLocation, 500, 500, ERadialImpulseFalloff::RIF_Constant, true);
+				UGameplayStatics::SpawnSoundAtLocation(this, explosionSound, GetActorLocation());
 			}
 		}
 	}

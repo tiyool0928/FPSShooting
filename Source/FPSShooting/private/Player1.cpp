@@ -641,3 +641,8 @@ void APlayer1::AnimNotify_PlayReloadSound()
 {
 	UGameplayStatics::SpawnSoundAtLocation(this, rifleReloadSound, GetActorLocation());
 }
+
+void APlayer1::AnimNotify_PlayPinPullSound()
+{
+	UGameplayStatics::SpawnSoundAtLocation(this, pinPullSound, GetActorLocation());
+}

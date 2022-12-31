@@ -31,4 +31,7 @@ public:
 		class UProjectileMovementComponent* movementComp;	//이동 컴포넌트
 
 	void Die();	//발사체 소멸
+
+	UPROPERTY(EditDefaultsOnly)
+		class USoundBase* explosionSound;							//수류탄 폭발 사운드
 };

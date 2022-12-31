@@ -42,6 +42,8 @@ public:
 		class USoundBase* rifleReloadSound;							//소총 장전 사운드
 	UPROPERTY(EditDefaultsOnly)
 		class USoundBase* sniperFireSound;							//저격총 사격 사운드
+	UPROPERTY(EditDefaultsOnly)
+		class USoundBase* pinPullSound;							//수류탄 핀 사운드
 
 
 	//좌우 입력 처리
@@ -133,4 +135,6 @@ public:
 		void AnimNotify_ReloadComplete();
 	UFUNCTION(BluePrintCallable)
 		void AnimNotify_PlayReloadSound();
+	UFUNCTION(BluePrintCallable)
+		void AnimNotify_PlayPinPullSound();
 };
