@@ -91,7 +91,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
-		TSubclassOf<class AGrenade> grenadeFactory;		//총알액터생성팩토리
+		TSubclassOf<class AGrenade> grenadeFactory;		//수류탄액터생성팩토리
 	
 	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
 		TSubclassOf<class UCameraShakeBase> cameraShake;

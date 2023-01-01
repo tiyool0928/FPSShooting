@@ -82,6 +82,7 @@ void AEnemyAIController::OnTargetDetected(AActor* actor, FAIStimulus const Stimu
 		else
 		{
 			me->detecting = false;
+			me->GetMesh()->GetAnimInstance()->StopAllMontages(0);
 			UE_LOG(LogTemp, Warning, TEXT("false"));
 		}
 	}

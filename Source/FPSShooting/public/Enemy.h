@@ -27,6 +27,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
+	UPROPERTY(EditDefaultsOnly)
+		class UArrowComponent* bulletArrow;
+	UPROPERTY(EditDefaultsOnly, Category = Factory)
+		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
+	UPROPERTY(EditDefaultsOnly)
+		class USoundBase* rifleFireSound;							//소총 사격 사운드
+
 	void TurnToLeft();		//왼쪽으로 도는 애니메이션
 	void TurnToRight();		//오른쪽으로 도는 애니메이션
 
