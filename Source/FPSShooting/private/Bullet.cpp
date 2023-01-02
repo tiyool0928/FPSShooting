@@ -15,7 +15,7 @@ ABullet::ABullet()
 	//충돌체 컴포넌트
 	boxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
 	SetRootComponent(boxComp);
-	boxComp->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	boxComp->BodyInstance.SetCollisionProfileName(TEXT("Bullet"));
 	boxComp->SetBoxExtent(FVector(3, 1, 1));
 	//외관 컴포넌트
 	meshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
@@ -39,7 +39,7 @@ ABullet::ABullet()
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
-	boxComp->OnComponentBeginOverlap.AddDynamic(this, &ABullet::OnOverlapBegin);
+	boxComp->OnComponentHit.AddDynamic(this, &ABullet::OnHit);
 	GetWorld()->GetTimerManager().SetTimer(deathTimerHandle, this, &ABullet::Die, 10, false);
 }
 
@@ -55,15 +55,11 @@ void ABullet::Die()
 	Destroy();
 }
 
-void ABullet::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ABullet::OnHit(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (OtherActor && (OtherActor != this) && OtherComp)
 	{
-		auto otherActor = Cast<APlayer1>(OtherActor);
-
-		if (OtherActor != otherActor)
-			UGameplayStatics::ApplyDamage(OtherActor, 300.0f, nullptr, this, nullptr);
-
+		UGameplayStatics::ApplyPointDamage(OtherActor, 30.0f, OtherActor->GetActorLocation(), Hit, nullptr, this, nullptr);
 		Destroy();
 	}
 }

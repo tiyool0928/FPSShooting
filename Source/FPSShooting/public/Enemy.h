@@ -28,7 +28,7 @@ public:
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-		class UArrowComponent* bulletArrow;
+		class UArrowComponent* bulletDir;
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
 	UPROPERTY(EditDefaultsOnly)
@@ -37,7 +37,11 @@ public:
 	void TurnToLeft();		//왼쪽으로 도는 애니메이션
 	void TurnToRight();		//오른쪽으로 도는 애니메이션
 
+	TArray<FName> criticalBone = { "head", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01" };
+
 	float walkSpeed = 200;
+	float health = 100;
 	bool detecting = false;
 
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };

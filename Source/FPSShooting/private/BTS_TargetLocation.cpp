@@ -47,7 +47,7 @@ void UBTS_TargetLocation::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 		{
 			FRotator targetRot;		//타겟으로의 방향
 			FTransform target;		//타겟으로의 트랜스폼
-			FVector startPos = me->bulletArrow->GetComponentLocation();		//시작 위치
+			FVector startPos = me->bulletDir->GetComponentLocation();		//시작 위치
 			auto Target = Cast<APlayer1>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AEnemyAIController::PlayerKey));
 			//타겟 위치
 			FVector endPos = Target->GetActorLocation();

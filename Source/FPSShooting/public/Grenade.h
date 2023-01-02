@@ -26,7 +26,7 @@ public:
 	FTimerHandle deathTimerHandle;
 
 	UPROPERTY(EditAnywhere)
-		class UStaticMeshComponent* meshComp;				//총알 외관
+		class UStaticMeshComponent* meshComp;				//수류탄 외관
 	UPROPERTY(VisibleAnywhere)
 		class UProjectileMovementComponent* movementComp;	//이동 컴포넌트
 

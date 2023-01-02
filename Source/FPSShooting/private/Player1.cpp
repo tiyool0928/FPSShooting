@@ -62,6 +62,7 @@ APlayer1::APlayer1()
 	{
 		rifleMeshComp->SetSkeletalMesh(RifleMesh.Object);
 		rifleMeshComp->SetRelativeLocationAndRotation(FVector(-3, 3, 2), FRotator(80, -90, 101));
+		rifleMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	//스나이프mesh 컴포넌트
 	sniperMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SnipeMeshComp"));
@@ -72,6 +73,7 @@ APlayer1::APlayer1()
 		sniperMeshComp->SetStaticMesh(SnipeMesh.Object);
 		sniperMeshComp->SetRelativeLocationAndRotation(FVector(-5, -30, -4), FRotator(78, -55, 135));
 		sniperMeshComp->SetWorldScale3D(FVector(0.1f, 0.15f, 0.15f));
+		sniperMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	//수류탄mesh 컴포넌트
 	grenadeMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GrenadeMeshComp"));
@@ -82,6 +84,7 @@ APlayer1::APlayer1()
 		grenadeMeshComp->SetStaticMesh(GrenadeMesh.Object);
 		grenadeMeshComp->SetRelativeLocationAndRotation(FVector(-1, -2, 3), FRotator(19, -442, 111));
 		grenadeMeshComp->SetWorldScale3D(FVector(0.1f, 0.15f, 0.15f));
+		grenadeMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	//arrow 컴포넌트
 	bulletArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
@@ -283,12 +286,14 @@ void APlayer1::RifleFire()
 	{
 		targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.ImpactPoint);
 		target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
+		//DrawDebugLine(GetWorld(), muzzle, hitInfo.ImpactPoint, FColor::Red, false, 3, (uint8)0U, 1.5f);
 	}
 	else
 	{
 		//타겟이 없으므로 트레이스 끝부분 지정
 		targetRot = UKismetMathLibrary::FindLookAtRotation(muzzle, hitInfo.TraceEnd);
 		target = UKismetMathLibrary::MakeTransform(muzzle, targetRot, FVector(1, 1, 1));
+		//DrawDebugLine(GetWorld(), muzzle, hitInfo.TraceEnd, FColor::Green, false, 3, (uint8)0U, 1.5f);
 	}
 	GetWorld()->SpawnActor<ABullet>(bulletFactory, target);
 	rifleBullet--;
@@ -336,6 +341,8 @@ void APlayer1::SniperFire()
 	//라인트레이스가 히트되었을 경우
 	if (bHit)
 	{
+		auto hitComp = hitInfo.GetActor();
+		UGameplayStatics::ApplyPointDamage(hitComp, 50.0f, hitComp->GetActorLocation(), hitInfo, nullptr, this, nullptr);
 		DrawDebugLine(GetWorld(), FPScamComp->GetComponentLocation(), hitInfo.ImpactPoint, FColor::Red, false, 3, (uint8)0U, 1.5f);
 	}
 	else

@@ -20,13 +20,14 @@ AEnemy::AEnemy()
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90), FRotator(0, -90, 0));
 	}
 	//총알 생성 위치 (Arrow)
-	bulletArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
-	bulletArrow->SetupAttachment(GetMesh());
-	bulletArrow->SetRelativeLocationAndRotation(FVector(0, 70, 135), FRotator(0, 0, 90));
+	bulletDir = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
+	bulletDir->SetupAttachment(GetMesh());
+	bulletDir->SetRelativeLocationAndRotation(FVector(0, 70, 135), FRotator(0, 90, 0));
 
 	//자연스러운 회전
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
 }
 
 // Called when the game starts or when spawned
@@ -60,5 +61,46 @@ void AEnemy::TurnToRight()
 {
 	auto anim = Cast<UEnemyAnim>(GetMesh()->GetAnimInstance());
 	anim->PlayTurnRightMontage();
+}
+
+float AEnemy::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointDamageEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+		for (auto bName : criticalBone)
+		{
+			if (PointDamageEvent->HitInfo.BoneName == bName)
+			{
+				if (bName == "head")
+					ActualDamage *= 3; // 맞은 부위가 머리면, 데미지 3배
+				else
+					ActualDamage *= 2; // 맞은 부위가 치명부위이면, 데미지 2배
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("BoneName :: %s"), *PointDamageEvent->HitInfo.BoneName.ToString());
+	}
+	if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		const FRadialDamageEvent* RadialDamageEvent = static_cast<const FRadialDamageEvent*>(&DamageEvent);
+	}
+	
+
+	if (ActualDamage > 0.0f)
+	{
+		health -= ActualDamage;
+		UE_LOG(LogTemp, Warning, TEXT("EnemyHealth: %f"), health);
+
+	}
+
+	if (health <= 0)
+	{
+		SetActorEnableCollision(false);
+		Destroy();
+	}
+
+	return ActualDamage;
 }
 
