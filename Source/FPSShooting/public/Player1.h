@@ -34,16 +34,18 @@ public:
 		class UStaticMeshComponent* sniperMeshComp;				//스나이프메시 컴포넌트 등록
 	UPROPERTY(EditDefaultsOnly)
 		class UStaticMeshComponent* grenadeMeshComp;				//수류탄메시 컴포넌트 등록
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
 		class UArrowComponent* bulletArrow;							//총알 발사 방향, 위치
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
 		class USoundBase* rifleFireSound;							//소총 사격 사운드
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
 		class USoundBase* rifleReloadSound;							//소총 장전 사운드
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
 		class USoundBase* sniperFireSound;							//저격총 사격 사운드
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
 		class USoundBase* pinPullSound;							//수류탄 핀 사운드
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
+		class USoundBase* baseStepSound;							//뛸 때 기본사운드
 
 
 	//좌우 입력 처리
@@ -61,6 +63,7 @@ public:
 	void Move();					//이동 처리
 	void InputRun();				//달리기 Press
 	void OutputRun();				//달리기 Release
+	void StepSoundControl();		//달리기 사운드 제어
 	void InputJump();				//점프 Press
 	void OutputJump();				//점프 Release
 	void InputCrouch();				//앉기 Press
@@ -97,6 +100,7 @@ public:
 		TSubclassOf<class UCameraShakeBase> cameraShake;
 
 	FTimerHandle FireSpeedTimerHandle;					//연사속도제어타이머
+	FTimerHandle StepSoundTimerHandle;					//연사속도제어타이머
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
@@ -122,6 +126,7 @@ public:
 	bool bUsingGrenade = false;				//수류탄을 든 상태인가?
 	bool isLeftMouseReleased = false;		//왼쪽마우스를 누르고 있는 상태인가?
 	bool isStandbyGrenade = false;			//수류탄 던질 준비 완료한 상태
+	bool stepSoundOverlapControl = false;			//달리기 사운드 겹침 방지 변수
 	bool rifleFireSpeedControl = false;		//소총 연사 속도 제어 변수
 
 	//노티파이 호출 함수

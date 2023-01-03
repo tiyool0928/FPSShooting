@@ -6,6 +6,7 @@
 #include "Player1.h"
 #include <Sound/SoundBase.h>
 #include <Kismet/GameplayStatics.h>
+#include <Perception/AISense_Hearing.h>
 #include <GameFramework/ProjectileMovementComponent.h>
 
 // Sets default values
@@ -40,7 +41,7 @@ void AGrenade::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->GetTimerManager().SetTimer(deathTimerHandle, this, &AGrenade::Die, 3, false);
+	GetWorld()->GetTimerManager().SetTimer(explosionTimerHandle, this, &AGrenade::Explosion, 3, false);
 }
 
 // Called every frame
@@ -50,7 +51,7 @@ void AGrenade::Tick(float DeltaTime)
 
 }
 
-void AGrenade::Die()
+void AGrenade::Explosion()
 {
 	TArray<FHitResult> OutHits;
 	FVector MyLocation = GetActorLocation();
@@ -71,6 +72,12 @@ void AGrenade::Die()
 		}
 	}*/
 	UGameplayStatics::SpawnSoundAtLocation(this, explosionSound, GetActorLocation());
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
+	GetWorld()->GetTimerManager().SetTimer(deathTimerHandle, this, &AGrenade::Die, 3, false);
+}
+
+void AGrenade::Die()
+{
 	Destroy();
 }
 

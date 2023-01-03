@@ -23,6 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	FTimerHandle explosionTimerHandle;
 	FTimerHandle deathTimerHandle;
 
 	UPROPERTY(EditAnywhere)
@@ -30,6 +31,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		class UProjectileMovementComponent* movementComp;	//ÀÌµ¿ ÄÄÆ÷³ÍÆ®
 
+	void Explosion(); //Æø¹ß
 	void Die();	//¹ß»çÃ¼ ¼Ò¸ê
 
 	UPROPERTY(EditDefaultsOnly)

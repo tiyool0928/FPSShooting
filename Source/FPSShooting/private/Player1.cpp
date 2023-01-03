@@ -13,6 +13,7 @@
 #include <Camera/CameraComponent.h>
 #include <Kismet/KismetMathLibrary.h>
 #include <Math/UnrealMathUtility.h>
+#include <Perception/AISense_Hearing.h>
 #include <Kismet/GameplayStatics.h>
 #include <Sound/SoundBase.h>
 
@@ -134,7 +135,15 @@ void APlayer1::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	Move();					//캐릭터 이동 함수
-
+	//달리기 시 오디오 겹침 방지
+	if (GetCharacterMovement()->MaxWalkSpeed == runSpeed && !stepSoundOverlapControl)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, baseStepSound, GetActorLocation());
+		UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
+		stepSoundOverlapControl = true;
+		GetWorld()->GetTimerManager().SetTimer(StepSoundTimerHandle, this, &APlayer1::StepSoundControl, 0.4f, false);
+	}
+	//소총 사격 연사 속도 제어
 	if (isLeftMouseReleased && bUsingRifle && !rifleFireSpeedControl)
 	{
 		RifleFire();
@@ -215,6 +224,12 @@ void APlayer1::InputRun()
 void APlayer1::OutputRun()
 {
 	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
+}
+
+void APlayer1::StepSoundControl()
+{
+	GetWorld()->GetTimerManager().ClearTimer(StepSoundTimerHandle);
+	stepSoundOverlapControl = false;
 }
 
 void APlayer1::InputJump()
@@ -305,6 +320,7 @@ void APlayer1::RifleFire()
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
 	UGameplayStatics::SpawnSoundAtLocation(this, rifleFireSound, muzzle);
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
 }
 
 void APlayer1::FireSpeedControl()
@@ -356,6 +372,7 @@ void APlayer1::SniperFire()
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
 	UGameplayStatics::SpawnSoundAtLocation(this, sniperFireSound, GetActorLocation());
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
 }
 
 void APlayer1::Reload()
