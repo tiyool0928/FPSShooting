@@ -79,32 +79,46 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 	}
 }
 
+void AEnemyAIController::OnUnPossess()
+{
+	unPossessed = true;
+	Super::OnUnPossess();
+}
+
 void AEnemyAIController::OnTargetDetected(AActor* actor, FAIStimulus const Stimulus)
 {
+	if (unPossessed) return;
+
 	if (auto const player = Cast<APlayer1>(actor))
 	{
 		//플레이어를 감지하면 true값을 넣어준다.
-		BlackboardComp->SetValueAsBool(TEXT("CanSeePlayer"), Stimulus.WasSuccessfullySensed());
-		BlackboardComp->SetValueAsObject(TEXT("Target"), player);
-		auto me = Cast<AEnemy>(BTComp->GetAIOwner()->GetPawn());
 
-		if (Stimulus.WasSuccessfullySensed())
+		if (Stimulus.Tag != TEXT("Noise"))
 		{
-			me->detecting = true;
-			UE_LOG(LogTemp, Warning, TEXT("true"));
-		}
-		else
-		{
-			me->detecting = false;
-			me->GetMesh()->GetAnimInstance()->StopAllMontages(0);
-			UE_LOG(LogTemp, Warning, TEXT("false"));
+			BlackboardComp->SetValueAsBool(TEXT("CanSeePlayer"), Stimulus.WasSuccessfullySensed());
+			BlackboardComp->SetValueAsObject(TEXT("Target"), player);
+
+			auto me = Cast<AEnemy>(BTComp->GetAIOwner()->GetPawn());
+
+			if (Stimulus.WasSuccessfullySensed())
+			{
+				if (Stimulus.IsValid())
+					UE_LOG(LogTemp, Warning, TEXT("SensingComplete"));
+				me->detecting = true;
+			}
+			else
+			{
+				me->detecting = false;
+				me->GetMesh()->GetAnimInstance()->StopAllMontages(0);
+			}
 		}
 	}
 }
 
 void AEnemyAIController::OnUpdated(TArray<AActor*> const& updatedActors)
 {
-	UE_LOG(LogTemp, Warning, TEXT("check"));
+	if (unPossessed) return;
+
 	for (AActor* DetectedPawn : updatedActors)
 	{
 		if (!HearingConfig->GetSenseID().IsValid()) return;
@@ -114,8 +128,7 @@ void AEnemyAIController::OnUpdated(TArray<AActor*> const& updatedActors)
 		for (size_t i = 0; i < info.LastSensedStimuli.Num(); ++i)
 		{
 			FAIStimulus const stim = info.LastSensedStimuli[i];
-			if(stim.IsValid())
-				UE_LOG(LogTemp, Warning, TEXT("SensingComplete"));
+			
 			//감지 감각이 청각이면
 			if (stim.Tag == TEXT("Noise"))
 			{
@@ -124,11 +137,10 @@ void AEnemyAIController::OnUpdated(TArray<AActor*> const& updatedActors)
 				BlackboardComp->SetValueAsVector(TEXT("TargetLoc"), stim.StimulusLocation);
 			}
 			//아니라면 시각
-			else
+			/*else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Bye"));
 				BlackboardComp->SetValueAsBool(TEXT("CanSeePlayer"), stim.WasSuccessfullySensed());
-			}
+			}*/
 		}
 	}
 }

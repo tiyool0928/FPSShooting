@@ -38,7 +38,11 @@ public:
 	UFUNCTION()		//청각으로 플레이어 발견 시 key값 부여
 		void OnUpdated(TArray<AActor*> const& updatedActors);
 
+	virtual void OnUnPossess() override;						//AIController 언바이딩
+
 public:
+	bool unPossessed = false;
+
 	//AI Perception 변수
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float AISightRadius = 1500.f;	//시야 반경

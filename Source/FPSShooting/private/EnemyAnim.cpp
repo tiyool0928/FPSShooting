@@ -19,6 +19,24 @@ void UEnemyAnim::PlayTurnRightMontage()
 	
 }
 
+void UEnemyAnim::PlayHitReactionMontage()
+{
+	if (HitReactionMontage != nullptr)
+		Montage_Play(HitReactionMontage);
+}
+
+void UEnemyAnim::PlayWalkingDieMontage()
+{
+	if (WalkingDieMontage != nullptr)
+		Montage_Play(WalkingDieMontage);
+}
+
+void UEnemyAnim::PlayDieMontage()
+{
+	if (DieMontage != nullptr)
+		Montage_Play(DieMontage);
+}
+
 void UEnemyAnim::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);

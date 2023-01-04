@@ -51,15 +51,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* ReadyGrenadeMontage;
 
-	//재생할 수류탄 대기 몽타주
+	//재생할 장전 몽타주
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* ReloadMontage;
+
+	//재생할 피격 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* HitReactionMontage;
+
+	//재생할 수류탄 대기 피격 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* GrenadeHitReactionMontage;
 
 	void PlayJumpMontage();
 	void PlayFireMontage();
 	void PlayReadyGrenadeMontage();
 	void PlayThrowGrenadeMontage();
 	void PlayReloadMontage();
+	void PlayHitReactionMontage();
+	void PlayGrenadeHitReactionMontage();
 
 
 	//매 프레임 갱신

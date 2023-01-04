@@ -3,7 +3,9 @@
 
 #include "Enemy.h"
 #include "EnemyAnim.h"
+#include "EnemyAIController.h"
 #include <Components/ArrowComponent.h>
+#include <Kismet/GameplayStatics.h>
 #include <GameFramework/CharacterMovementComponent.h>
 
 // Sets default values
@@ -63,6 +65,36 @@ void AEnemy::TurnToRight()
 	anim->PlayTurnRightMontage();
 }
 
+void AEnemy::Die()
+{
+	AEnemyAIController* AIController = this->GetController<AEnemyAIController>();
+
+	if (AIController != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UnPossess"));
+		AIController->OnUnPossess();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Didn't UnPossess"));
+	}
+
+	auto anim = Cast<UEnemyAnim>(GetMesh()->GetAnimInstance());
+	anim->isDeath = true;
+	if (detecting)
+		anim->PlayDieMontage();
+	else
+		anim->PlayWalkingDieMontage();
+	GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, this, &AEnemy::DestroyTemp, 3.0f, false);
+	//GetWorld()->GetFirstPlayerController()->SetPause(true);
+}
+
+void AEnemy::DestroyTemp()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DieTimerHandle);
+	Destroy();
+}
+
 float AEnemy::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -80,6 +112,7 @@ float AEnemy::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AControl
 					ActualDamage *= 2; // 맞은 부위가 치명부위이면, 데미지 2배
 			}
 		}
+		FVector impactLocation = PointDamageEvent->HitInfo.ImpactPoint;
 		UE_LOG(LogTemp, Warning, TEXT("BoneName :: %s"), *PointDamageEvent->HitInfo.BoneName.ToString());
 	}
 	if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
@@ -87,18 +120,18 @@ float AEnemy::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AControl
 		const FRadialDamageEvent* RadialDamageEvent = static_cast<const FRadialDamageEvent*>(&DamageEvent);
 	}
 	
-
+	auto anim = Cast<UEnemyAnim>(GetMesh()->GetAnimInstance());
 	if (ActualDamage > 0.0f)
 	{
 		health -= ActualDamage;
+		anim->PlayHitReactionMontage();
 		UE_LOG(LogTemp, Warning, TEXT("EnemyHealth: %f"), health);
 
 	}
-
 	if (health <= 0)
 	{
 		SetActorEnableCollision(false);
-		Destroy();
+		Die();
 	}
 
 	return ActualDamage;

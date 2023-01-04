@@ -70,8 +70,9 @@ public:
 	void OutputCrouch();			//앉기 Release
 	void InputLeftMouse();			//왼쪽 마우스 클릭
 	void RifleFire();				//소총 발사
-	void FireSpeedControl();		//소총 연사 속도 제어
+	void RifleFireSpeedControl();	//소총 연사 속도 제어
 	void SniperFire();				//저격총 발사
+	void SniperFireSpeedControl();	//저격총 연사 속도 제어
 	void Reload();					//장전
 	void ChangePerspective();		//카메라 시점 변경
 	void InputThrowGrenade();			//수류탄 투척 준비동작
@@ -99,8 +100,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
 		TSubclassOf<class UCameraShakeBase> cameraShake;
 
-	FTimerHandle FireSpeedTimerHandle;					//연사속도제어타이머
-	FTimerHandle StepSoundTimerHandle;					//연사속도제어타이머
+	FTimerHandle RifleFireSpeedTimerHandle;					//소총연사속도제어타이머
+	FTimerHandle SniperFireSpeedTimerHandle;			//저격총연사속도제어타이머
+	FTimerHandle StepSoundTimerHandle;					//달리기사운드겹침제어타이머
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
@@ -126,8 +128,10 @@ public:
 	bool bUsingGrenade = false;				//수류탄을 든 상태인가?
 	bool isLeftMouseReleased = false;		//왼쪽마우스를 누르고 있는 상태인가?
 	bool isStandbyGrenade = false;			//수류탄 던질 준비 완료한 상태
-	bool stepSoundOverlapControl = false;			//달리기 사운드 겹침 방지 변수
+	bool stepSoundOverlapControl = false;	//달리기 사운드 겹침 방지 변수
 	bool rifleFireSpeedControl = false;		//소총 연사 속도 제어 변수
+	bool sniperFireSpeedControl = false;	//저격총 연사 속도 제어 변수
+	bool isReloading = false;				//장전중인가?
 
 	//노티파이 호출 함수
 	UFUNCTION(BluePrintCallable)
@@ -142,4 +146,9 @@ public:
 		void AnimNotify_PlayReloadSound();
 	UFUNCTION(BluePrintCallable)
 		void AnimNotify_PlayPinPullSound();
+
+	TArray<FName> criticalBone = { "head", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01" };
+
+	//대미지 피격 함수
+	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 };

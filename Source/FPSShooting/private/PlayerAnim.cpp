@@ -36,6 +36,19 @@ void UPlayerAnim::PlayReloadMontage()
 		Montage_Play(ReloadMontage);
 }
 
+void UPlayerAnim::PlayHitReactionMontage()
+{
+	if (HitReactionMontage != nullptr)
+		Montage_Play(HitReactionMontage);
+}
+
+void UPlayerAnim::PlayGrenadeHitReactionMontage()
+{
+	if (GrenadeHitReactionMontage != nullptr)
+		Montage_Play(GrenadeHitReactionMontage);
+		
+}
+
 void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);

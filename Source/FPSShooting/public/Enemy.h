@@ -36,6 +36,10 @@ public:
 
 	void TurnToLeft();		//왼쪽으로 도는 애니메이션
 	void TurnToRight();		//오른쪽으로 도는 애니메이션
+	void Die();				//사망 함수
+	void DestroyTemp();		//Destroy() 임시 함수
+
+	FTimerHandle DieTimerHandle;
 
 	TArray<FName> criticalBone = { "head", "pelvis", "spine_01", "spine_02", "spine_03", "neck_01" };
 

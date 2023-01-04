@@ -35,5 +35,7 @@ public:
 	void Die();	//¹ß»çÃ¼ ¼Ò¸ê
 
 	UPROPERTY(EditDefaultsOnly)
+		class UParticleSystem* explosionEffect;			//¼ö·ùÅº Æø¹ß ÀÌÆåÆ®
+	UPROPERTY(EditDefaultsOnly)
 		class USoundBase* explosionSound;							//¼ö·ùÅº Æø¹ß »ç¿îµå
 };

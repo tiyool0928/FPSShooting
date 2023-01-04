@@ -92,7 +92,7 @@ APlayer1::APlayer1()
 	bulletArrow->SetupAttachment(rifleMeshComp, TEXT("Muzzle"));
 
 	//체력 초기화
-	playerMaxHealth = 100;
+	playerMaxHealth = 10000;
 	playerHealth = playerMaxHealth;
 
 	//플레이어 앉기 세팅
@@ -146,9 +146,11 @@ void APlayer1::Tick(float DeltaTime)
 	//소총 사격 연사 속도 제어
 	if (isLeftMouseReleased && bUsingRifle && !rifleFireSpeedControl)
 	{
+		//장전중이면 장전취소
+		if (isReloading) isReloading = false;
 		RifleFire();
 		rifleFireSpeedControl = true;
-		GetWorld()->GetTimerManager().SetTimer(FireSpeedTimerHandle, this, &APlayer1::FireSpeedControl, 0.1f, false);
+		GetWorld()->GetTimerManager().SetTimer(RifleFireSpeedTimerHandle, this, &APlayer1::RifleFireSpeedControl, 0.1f, false);
 	}
 }
 
@@ -254,6 +256,9 @@ void APlayer1::OutputCrouch()
 
 void APlayer1::InputLeftMouse()
 {
+	//장전중이면
+	if (isReloading) return;
+
 	isLeftMouseReleased = true;
 
 	if (bUsingSniper)
@@ -323,14 +328,19 @@ void APlayer1::RifleFire()
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
 }
 
-void APlayer1::FireSpeedControl()
+void APlayer1::RifleFireSpeedControl()
 {
-	GetWorld()->GetTimerManager().ClearTimer(FireSpeedTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(RifleFireSpeedTimerHandle);
 	rifleFireSpeedControl = false;
 }
 
 void APlayer1::SniperFire()
 {
+	if (sniperFireSpeedControl)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("bullet load..."));
+		return;
+	}
 	if (sniperBullet <= 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("sniperBullet: %f"), sniperBullet);
@@ -367,6 +377,8 @@ void APlayer1::SniperFire()
 	}
 	GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(cameraShake);
 	sniperBullet--;
+	sniperFireSpeedControl = true;
+	GetWorld()->GetTimerManager().SetTimer(SniperFireSpeedTimerHandle, this, &APlayer1::SniperFireSpeedControl, 2.0f, false);
 
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	_playerWidget->UpdateAmmoByFire();
@@ -375,8 +387,19 @@ void APlayer1::SniperFire()
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
 }
 
+void APlayer1::SniperFireSpeedControl()
+{
+	GetWorld()->GetTimerManager().ClearTimer(SniperFireSpeedTimerHandle);
+	sniperFireSpeedControl = false;
+}
+
 void APlayer1::Reload()
 {
+	if (isReloading || bUsingGrenade)
+	{
+		return;
+	}
+	isReloading = true;
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->PlayReloadMontage();
 }
@@ -489,6 +512,9 @@ void APlayer1::ZoomInOut()
 
 void APlayer1::Swap1()
 {
+	//장전중이면 장전취소
+	if (isReloading) isReloading = false;
+
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->StopAllMontages(0);
 	bUsingRifle = true;
@@ -516,6 +542,9 @@ void APlayer1::Swap1()
 
 void APlayer1::Swap2()
 {
+	//장전중이면 장전취소
+	if (isReloading) isReloading = false;
+
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->StopAllMontages(0);
 	bUsingSniper = true;
@@ -530,6 +559,9 @@ void APlayer1::Swap2()
 
 void APlayer1::Swap3()
 {
+	//장전중이면 장전취소
+	if (isReloading) isReloading = false;
+
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	anim->StopAllMontages(0);
 	bUsingSniper = false;
@@ -658,6 +690,7 @@ void APlayer1::AnimNotify_ReloadComplete()
 			keepSniperBullet -= needBullet;
 		}
 	}
+	isReloading = false;
 	_playerWidget->UpdateAmmoBySwap();
 }
 
@@ -669,4 +702,54 @@ void APlayer1::AnimNotify_PlayReloadSound()
 void APlayer1::AnimNotify_PlayPinPullSound()
 {
 	UGameplayStatics::SpawnSoundAtLocation(this, pinPullSound, GetActorLocation());
+}
+
+float APlayer1::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointDamageEvent = static_cast<const FPointDamageEvent*>(&DamageEvent);
+		for (auto bName : criticalBone)
+		{
+			if (PointDamageEvent->HitInfo.BoneName == bName)
+			{
+				if (bName == "head")
+					ActualDamage *= 3; // 맞은 부위가 머리면, 데미지 3배
+				else
+					ActualDamage *= 2; // 맞은 부위가 치명부위이면, 데미지 2배
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("BoneName :: %s"), *PointDamageEvent->HitInfo.BoneName.ToString());
+	}
+	if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		const FRadialDamageEvent* RadialDamageEvent = static_cast<const FRadialDamageEvent*>(&DamageEvent);
+	}
+
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	if (ActualDamage > 0.0f)
+	{
+		playerHealth -= ActualDamage;
+		UE_LOG(LogTemp, Warning, TEXT("PlayerHealth: %f"), playerHealth);
+
+		if (!bUsingGrenade)
+		{
+			anim->PlayHitReactionMontage();
+		}
+		else if(bUsingGrenade && !isLeftMouseReleased)
+		{
+			anim->PlayGrenadeHitReactionMontage();
+			UE_LOG(LogTemp, Warning, TEXT("Montage Check"));
+		}
+	}
+
+	if (playerHealth <= 0)
+	{
+		SetActorEnableCollision(false);
+		Destroy();
+	}
+
+	return ActualDamage;
 }
