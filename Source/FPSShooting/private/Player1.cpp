@@ -91,10 +91,6 @@ APlayer1::APlayer1()
 	bulletArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("BulletArrow"));
 	bulletArrow->SetupAttachment(rifleMeshComp, TEXT("Muzzle"));
 
-	//체력 초기화
-	playerMaxHealth = 10000;
-	playerHealth = playerMaxHealth;
-
 	//플레이어 앉기 세팅
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->SetCrouchedHalfHeight(60);
@@ -104,7 +100,8 @@ APlayer1::APlayer1()
 void APlayer1::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	playerHealth = playerMaxHealth;
+	playerArmor = playerMaxArmor;
 	//초기 속도 걷기속도
 	GetCharacterMovement()->MaxWalkSpeed = walkSpeed;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = crouchSpeed;
@@ -125,7 +122,7 @@ void APlayer1::BeginPlay()
 		_playerWidget = Cast<UUI_Player>(CreateWidget(GetWorld(), playerWidget));
 		_playerWidget->SetOwnerPlayer(this);
 		_playerWidget->AddToViewport();
-		_playerWidget->UpdeateHealthBar();
+		_playerWidget->UpdateHealthBar();
 		_playerWidget->UpdateAmmoBySwap();
 	}
 }
@@ -143,14 +140,30 @@ void APlayer1::Tick(float DeltaTime)
 		stepSoundOverlapControl = true;
 		GetWorld()->GetTimerManager().SetTimer(StepSoundTimerHandle, this, &APlayer1::StepSoundControl, 0.4f, false);
 	}
+
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	//소총 사격 연사 속도 제어
-	if (isLeftMouseReleased && bUsingRifle && !rifleFireSpeedControl)
+	if (isLeftMouseReleased && bUsingRifle && !rifleFireSpeedControl && !anim->isDeath)
 	{
 		//장전중이면 장전취소
 		if (isReloading) isReloading = false;
 		RifleFire();
 		rifleFireSpeedControl = true;
 		GetWorld()->GetTimerManager().SetTimer(RifleFireSpeedTimerHandle, this, &APlayer1::RifleFireSpeedControl, 0.1f, false);
+	}
+	if (anim->isDeath)	//죽었을 경우 카메라를 (0, 0, 300)만큼 멀리한다
+	{
+		TPScamComp->SetRelativeLocation(FMath::VInterpTo(TPScamComp->GetRelativeLocation(),
+			FVector(0, 0, 500), GetWorld()->GetDeltaSeconds(), 3.0f));
+		TPScamComp->SetRelativeRotation(FMath::RInterpTo(TPScamComp->GetRelativeRotation(),
+			FRotator(-70, 0, 0), GetWorld()->GetDeltaSeconds(), 3.0f));
+	}
+	else
+	{
+		TPScamComp->SetRelativeLocation(FMath::VInterpTo(TPScamComp->GetRelativeLocation(),
+			FVector(0, 0, 0), GetWorld()->GetDeltaSeconds(), 3.0f));
+		TPScamComp->SetRelativeRotation(FMath::RInterpTo(TPScamComp->GetRelativeRotation(),
+			FRotator(0, 0, 0), GetWorld()->GetDeltaSeconds(), 3.0f));
 	}
 }
 
@@ -459,6 +472,44 @@ void APlayer1::OutputLeftMouse()
 	}
 }
 
+void APlayer1::Die()
+{
+	DisableInput(GetWorld()->GetFirstPlayerController());
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->isDeath = true;
+
+	if (isFPSPerspective)		//FPS카메라 상태이면 TPS로 변경
+	{
+		FPScamComp->SetActive(false);
+		TPScamComp->SetActive(true);
+	}
+	//UI 모두 지우기
+	if (_zoomWidget != nullptr)
+	{
+		_zoomWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (_playerWidget != nullptr)
+	{
+		_playerWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (bUsingGrenade)
+	{
+		anim->PlayDieGrenadeMontage();
+		anim->Montage_JumpToSection("Start", anim->DieGrenadeMontage);
+	}
+		
+	else
+		anim->PlayDieBaseMontage();
+	GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, this, &APlayer1::DestroyTemp, 3.0f, false);
+}
+
+void APlayer1::DestroyTemp()
+{
+	//게임 일시정지
+	GetWorld()->GetFirstPlayerController()->SetPause(true);
+}
+
 void APlayer1::ZoomInOut()
 {
 	if (bUsingSniper)
@@ -731,24 +782,39 @@ float APlayer1::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AContr
 	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
 	if (ActualDamage > 0.0f)
 	{
-		playerHealth -= ActualDamage;
-		UE_LOG(LogTemp, Warning, TEXT("PlayerHealth: %f"), playerHealth);
+		float tempDamage = ActualDamage;
+		if (playerArmor > tempDamage)			//아머가 대미지보다 많을 경우
+		{
+			playerArmor -= tempDamage;
+		}
+		else									//아머보다 대미지가 많을 경우
+		{
+			tempDamage -= playerArmor;
+			playerArmor = 0;
+			playerHealth -= tempDamage;
+		}
 
 		if (!bUsingGrenade)
 		{
 			anim->PlayHitReactionMontage();
 		}
-		else if(bUsingGrenade && !isLeftMouseReleased)
+		else if((bUsingGrenade && !isLeftMouseReleased))
 		{
 			anim->PlayGrenadeHitReactionMontage();
 			UE_LOG(LogTemp, Warning, TEXT("Montage Check"));
+		}
+
+		if (IsValid(playerWidget))
+		{
+			_playerWidget->UpdateArmorBar();
+			_playerWidget->UpdateHealthBar();
 		}
 	}
 
 	if (playerHealth <= 0)
 	{
 		SetActorEnableCollision(false);
-		Destroy();
+		Die();
 	}
 
 	return ActualDamage;

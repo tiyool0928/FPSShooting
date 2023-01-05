@@ -75,8 +75,10 @@ public:
 	void SniperFireSpeedControl();	//저격총 연사 속도 제어
 	void Reload();					//장전
 	void ChangePerspective();		//카메라 시점 변경
-	void InputThrowGrenade();			//수류탄 투척 준비동작
+	void InputThrowGrenade();		//수류탄 투척 준비동작
 	void OutputLeftMouse();			//수류탄 투척
+	void Die();						//사망 함수
+	void DestroyTemp();				//Destroy() 임시 변수
 	//저격총 스코프 사용, 해제
 	void ZoomInOut();
 	//총 스왑 함수
@@ -103,6 +105,7 @@ public:
 	FTimerHandle RifleFireSpeedTimerHandle;					//소총연사속도제어타이머
 	FTimerHandle SniperFireSpeedTimerHandle;			//저격총연사속도제어타이머
 	FTimerHandle StepSoundTimerHandle;					//달리기사운드겹침제어타이머
+	FTimerHandle DieTimerHandle;					//달리기사운드겹침제어타이머
 
 	//이동 속도
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
@@ -112,8 +115,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = PlayerSetting)
 		float crouchSpeed = 150;
 
-	float playerMaxHealth;			//최대체력
-	float playerHealth;				//현재체력
+	UPROPERTY(EditDefaultsOnly)
+		float playerMaxHealth = 100;			//최대체력
+	float playerHealth;							//현재체력
+	UPROPERTY(EditDefaultsOnly)
+		float playerMaxArmor = 100;				//최대아머
+	float playerArmor;							//현재아머
 	float rifleBullet = 30;
 	float keepRifleBullet = 360;		//소총 총알 여분
 	float sniperBullet = 5;

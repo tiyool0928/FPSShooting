@@ -35,6 +35,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		bool isSwap3 = false;
 
+	//죽은 상태인가
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		bool isDeath = false;
+
 	//재생할 점프 몽타주
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* JumpMontage;
@@ -63,6 +67,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
 		class UAnimMontage* GrenadeHitReactionMontage;
 
+	//재생할 수류탄 대기 피격 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* DieBaseMontage;
+
+	//재생할 수류탄 대기 피격 몽타주
+	UPROPERTY(EditDefaultsOnly, Category = PlayerAnim)
+		class UAnimMontage* DieGrenadeMontage;
+
 	void PlayJumpMontage();
 	void PlayFireMontage();
 	void PlayReadyGrenadeMontage();
@@ -70,6 +82,8 @@ public:
 	void PlayReloadMontage();
 	void PlayHitReactionMontage();
 	void PlayGrenadeHitReactionMontage();
+	void PlayDieBaseMontage();
+	void PlayDieGrenadeMontage();
 
 
 	//매 프레임 갱신

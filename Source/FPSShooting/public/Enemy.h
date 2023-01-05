@@ -31,6 +31,8 @@ public:
 		class UArrowComponent* bulletDir;
 	UPROPERTY(EditDefaultsOnly, Category = Factory)
 		TSubclassOf<class ABullet> bulletFactory;		//총알액터생성팩토리
+	UPROPERTY(EditDefaultsOnly, Category = Factory)
+		TSubclassOf<class AItemVest> vestFactory;		//아이템액터생성팩토리
 	UPROPERTY(EditDefaultsOnly)
 		class USoundBase* rifleFireSound;							//소총 사격 사운드
 

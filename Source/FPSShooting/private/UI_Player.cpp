@@ -6,13 +6,22 @@
 #include <Components/TextBlock.h>
 #include <Components/Image.h>
 
-void UUI_Player::UpdeateHealthBar()
+void UUI_Player::UpdateHealthBar()
 {
 	healthBar->SetPercent(OwnerPlayer->playerHealth / OwnerPlayer->playerMaxHealth);
 
 	Opts.SetMaximumFractionalDigits(0);
 	currentHealth->SetText(FText::AsNumber(OwnerPlayer->playerHealth, &Opts));
 	maxHealth->SetText(FText::AsNumber(OwnerPlayer->playerMaxHealth, &Opts));
+}
+
+void UUI_Player::UpdateArmorBar()
+{
+	armorBar->SetPercent(OwnerPlayer->playerArmor / OwnerPlayer->playerMaxArmor);
+
+	Opts.SetMaximumFractionalDigits(0);
+	currentArmor->SetText(FText::AsNumber(OwnerPlayer->playerArmor, &Opts));
+	maxArmor->SetText(FText::AsNumber(OwnerPlayer->playerMaxArmor, &Opts));
 }
 
 void UUI_Player::UpdateAmmoBySwap()

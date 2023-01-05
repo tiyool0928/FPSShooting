@@ -25,6 +25,12 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* maxHealth;
 	UPROPERTY(meta = (BindWidget))
+		class UProgressBar* armorBar;
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* currentArmor;
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* maxArmor;
+	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* currentAmmo;
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* maxAmmo;
@@ -32,7 +38,8 @@ protected:
 public:
 	FNumberFormattingOptions Opts;
 
-	void UpdeateHealthBar();	//체력 업데이트
+	void UpdateHealthBar();	//체력 업데이트
+	void UpdateArmorBar();		//아머 업데이트
 	void UpdateAmmoBySwap();	//총기교체로 인한 총알 업데이트
 	void UpdateAmmoByFire();	//사격으로 인한 총알 업데이트
 	void SetOwnerPlayer(APlayer1* InPlayer) { OwnerPlayer = InPlayer; }

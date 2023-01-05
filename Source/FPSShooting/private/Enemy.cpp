@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include "EnemyAnim.h"
 #include "EnemyAIController.h"
+#include "ItemVest.h"
 #include <Components/ArrowComponent.h>
 #include <Kismet/GameplayStatics.h>
 #include <GameFramework/CharacterMovementComponent.h>
@@ -44,7 +45,6 @@ void AEnemy::BeginPlay()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -85,6 +85,8 @@ void AEnemy::Die()
 		anim->PlayDieMontage();
 	else
 		anim->PlayWalkingDieMontage();
+
+	GetWorld()->SpawnActor<AItemVest>(vestFactory, GetActorTransform());
 	GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, this, &AEnemy::DestroyTemp, 3.0f, false);
 	//GetWorld()->GetFirstPlayerController()->SetPause(true);
 }
