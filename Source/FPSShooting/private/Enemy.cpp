@@ -5,6 +5,7 @@
 #include "EnemyAnim.h"
 #include "EnemyAIController.h"
 #include "ItemVest.h"
+#include "ItemBullet.h"
 #include <Components/ArrowComponent.h>
 #include <Kismet/GameplayStatics.h>
 #include <GameFramework/CharacterMovementComponent.h>
@@ -86,7 +87,13 @@ void AEnemy::Die()
 	else
 		anim->PlayWalkingDieMontage();
 
-	GetWorld()->SpawnActor<AItemVest>(vestFactory, GetActorTransform());
+	int RandItem = FMath::FRandRange(0, 2);
+	UE_LOG(LogTemp, Warning, TEXT("%d"), RandItem);
+	if(RandItem == 0)
+		GetWorld()->SpawnActor<AItemVest>(itemVestFactory, GetActorTransform());
+	else
+		GetWorld()->SpawnActor<AItemBullet>(itemBulletFactory, GetActorTransform());
+
 	GetWorld()->GetTimerManager().SetTimer(DieTimerHandle, this, &AEnemy::DestroyTemp, 3.0f, false);
 	//GetWorld()->GetFirstPlayerController()->SetPause(true);
 }

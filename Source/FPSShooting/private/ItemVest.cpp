@@ -61,13 +61,14 @@ void AItemVest::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Othe
 
 		if (OtherActor == Player)
 		{
-			if (Player->playerArmor + 20 > 100)
+			int dropArmor = FMath::FRandRange(10, 21);
+			if (Player->playerArmor + dropArmor > 100)	//100은 초과하지 않는다.
 			{
 				Player->playerArmor = 100;
 			}
 			else
 			{
-				Player->playerArmor += 20;
+				Player->playerArmor += dropArmor;
 			}
 			if (IsValid(Player->playerWidget))	//UI 업데이트
 			{

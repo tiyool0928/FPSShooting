@@ -56,7 +56,7 @@ AEnemyAIController::AEnemyAIController(FObjectInitializer const& object_initiali
 
 	//청각 센서
 	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("Hearing Config"));
-	HearingConfig->HearingRange = 1500.0f;
+	HearingConfig->HearingRange = 5000.0f;
 	HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
 	HearingConfig->DetectionByAffiliation.bDetectFriendlies = false;
 	HearingConfig->DetectionByAffiliation.bDetectNeutrals = false;

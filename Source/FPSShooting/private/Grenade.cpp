@@ -56,7 +56,7 @@ void AGrenade::Explosion()
 	TArray<FHitResult> OutHits;
 	FVector MyLocation = GetActorLocation();
 	FCollisionShape CollisionSphere = FCollisionShape::MakeSphere(500);
-	DrawDebugSphere(GetWorld(), MyLocation, CollisionSphere.GetSphereRadius(), 50, FColor::Cyan, true);
+	//DrawDebugSphere(GetWorld(), MyLocation, CollisionSphere.GetSphereRadius(), 50, FColor::Cyan, true);
 	UGameplayStatics::ApplyRadialDamage(GetWorld(), 300.0f, MyLocation, 500.0f, nullptr, TArray<AActor*>(), this, nullptr, false, ECollisionChannel::ECC_Visibility);
 	//AddImpulse ºÎºÐ
 	/*bool isHit = GetWorld()->SweepMultiByChannel(OutHits, MyLocation, MyLocation, FQuat::Identity, ECC_WorldStatic, CollisionSphere);
@@ -73,7 +73,7 @@ void AGrenade::Explosion()
 	}*/
 	UGameplayStatics::SpawnSoundAtLocation(this, explosionSound, GetActorLocation());
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), explosionEffect, GetActorLocation(), FRotator(0, 0, 0), FVector3d(6, 6, 6));
-	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 500.0f, TEXT("Noise"));
 	GetWorld()->GetTimerManager().SetTimer(deathTimerHandle, this, &AGrenade::Die, 3, false);
 }
 

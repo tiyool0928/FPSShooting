@@ -338,7 +338,7 @@ void APlayer1::RifleFire()
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
 	UGameplayStatics::SpawnSoundAtLocation(this, rifleFireSound, muzzle);
-	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 200.0f, TEXT("Noise"));
 }
 
 void APlayer1::RifleFireSpeedControl()
@@ -397,7 +397,7 @@ void APlayer1::SniperFire()
 	_playerWidget->UpdateAmmoByFire();
 	anim->PlayFireMontage();
 	UGameplayStatics::SpawnSoundAtLocation(this, sniperFireSound, GetActorLocation());
-	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 0.0f, TEXT("Noise"));
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.0f, this, 500.0f, TEXT("Noise"));
 }
 
 void APlayer1::SniperFireSpeedControl()
